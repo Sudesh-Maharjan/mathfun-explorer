@@ -2,11 +2,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useQuiz } from '../context/QuizContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { LogIn } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import AuthLayout from './AuthLayout';
 
 const TeacherLogin: React.FC = () => {
@@ -42,7 +42,7 @@ const TeacherLogin: React.FC = () => {
         <CardHeader>
           <CardTitle>Teacher Login</CardTitle>
           <CardDescription>
-            Login to access the admin panel and manage questions
+            Login to access the teacher panel and manage questions
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -73,6 +73,14 @@ const TeacherLogin: React.FC = () => {
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="flex justify-center border-t pt-4">
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link to="/register-teacher" className="text-primary font-medium hover:underline">
+              Register now
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </AuthLayout>
   );

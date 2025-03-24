@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 // Auth Components
 import TeacherLogin from "./components/TeacherLogin";
 import StudentRegistration from "./components/StudentRegistration";
+import TeacherRegistration from "./components/TeacherRegistration";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/login" element={<TeacherLogin />} />
               <Route path="/register" element={<StudentRegistration />} />
+              <Route path="/register-teacher" element={<TeacherRegistration />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
