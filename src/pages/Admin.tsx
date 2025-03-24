@@ -6,9 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuiz } from '../context/QuizContext';
 import Header from '../components/Header';
 import AdminPanel from '../components/AdminPanel';
-import { Settings, Users } from 'lucide-react';
+import { Settings, Users, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import StudentDetailedPerformance from '../components/StudentDetailedPerformance';
 
 const Admin = () => {
   const { students, isTeacher } = useQuiz();
@@ -60,7 +61,7 @@ const Admin = () => {
           <h1 className="text-3xl font-bold mb-6">Teacher Panel</h1>
           
           <Tabs defaultValue="questions">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="questions" className="gap-2">
                 <Settings className="h-4 w-4" />
                 Manage Questions
@@ -68,6 +69,10 @@ const Admin = () => {
               <TabsTrigger value="students" className="gap-2">
                 <Users className="h-4 w-4" />
                 Student Data
+              </TabsTrigger>
+              <TabsTrigger value="performance" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Detailed Performance
               </TabsTrigger>
             </TabsList>
             
@@ -128,6 +133,10 @@ const Admin = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="performance">
+              <StudentDetailedPerformance students={students} />
             </TabsContent>
           </Tabs>
         </motion.div>
