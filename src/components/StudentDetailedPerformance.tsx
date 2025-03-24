@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Student, useQuiz, Question } from '../context/QuizContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -32,7 +31,7 @@ interface StudentDetailedPerformanceProps {
 }
 
 const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({ students }) => {
-  const { allQuestions } = useQuiz();
+  const { questionHistory } = useQuiz();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // If there are no students, show a message
@@ -105,14 +104,26 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
     : 0;
   const wrongAnswers = selectedStudent.totalQuestions - selectedStudent.correctAnswers;
 
-  // Mock data for questions (in a real app, this would come from the database)
-  // In this simulation, we'll generate some sample questions the student might have answered
-  const mockAnsweredQuestions = allQuestions.slice(0, selectedStudent.totalQuestions).map((q, index) => {
+  // Generate mock question data for the student
+  // Instead of using allQuestions (which doesn't exist), create mock data based on the student's performance
+  // or use the available questionHistory as a reference
+  const mockAnsweredQuestions = Array.from({ length: selectedStudent.totalQuestions }).map((_, index) => {
+    // Use questionHistory items as templates if available, otherwise create generic questions
+    const baseQuestion = questionHistory[index % questionHistory.length] || {
+      id: `mock-${index}`,
+      question: `${index + 1} + ${index + 2} = ?`,
+      options: [index + 3, index + 4, index + 5, index + 6],
+      answer: index + 3,
+      operation: ['addition', 'subtraction', 'multiplication', 'division'][index % 4] as any,
+      difficulty: ['easy', 'medium', 'hard'][index % 3] as any
+    };
+    
     // Make sure the number of correct answers matches the student's record
     const isCorrect = index < selectedStudent.correctAnswers;
+    
     return {
-      ...q,
-      studentAnswer: isCorrect ? q.answer : q.options.find(opt => opt !== q.answer) || 0,
+      ...baseQuestion,
+      studentAnswer: isCorrect ? baseQuestion.answer : (baseQuestion.options.find(opt => opt !== baseQuestion.answer) || 0),
       isCorrect
     };
   });
