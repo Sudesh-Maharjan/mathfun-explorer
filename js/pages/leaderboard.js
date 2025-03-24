@@ -60,7 +60,9 @@ const LeaderboardPage = (function() {
         
         // Filter students
         const filteredStudents = students.filter(student => 
-          student.name.toLowerCase().includes(searchValue)
+          student.name.toLowerCase().includes(searchValue) ||
+          (student.roll && student.roll.toLowerCase().includes(searchValue)) ||
+          (student.class && student.class.toLowerCase().includes(searchValue))
         );
         
         // Re-render table
@@ -122,6 +124,8 @@ const LeaderboardPage = (function() {
         <div class="table-header">
           <div class="col-rank">Rank</div>
           <div class="col-name">Name</div>
+          <div class="col-roll">Roll</div>
+          <div class="col-class">Class</div>
           <div class="col-questions">Questions</div>
           <div class="col-accuracy">Accuracy</div>
           <div class="col-score">Score</div>
@@ -161,6 +165,8 @@ const LeaderboardPage = (function() {
         <div class="table-row ${rowClass}">
           <div class="col-rank">${rankIcon}</div>
           <div class="col-name">${student.name}</div>
+          <div class="col-roll">${student.roll || 'N/A'}</div>
+          <div class="col-class">${student.class || 'N/A'}</div>
           <div class="col-questions">${student.totalQuestions}</div>
           <div class="col-accuracy">${accuracy}%</div>
           <div class="col-score">${student.score}</div>

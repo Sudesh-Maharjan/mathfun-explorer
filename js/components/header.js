@@ -45,8 +45,18 @@ const Header = (function() {
           <div class="header-actions">
             ${currentStudent ? `
               <div class="student-info">
-                <span class="label">Student:</span>
-                <span class="name">${currentStudent.name}</span>
+                <div>
+                  <span class="label">Student:</span>
+                  <span class="name">${currentStudent.name}</span>
+                </div>
+                <div>
+                  <span class="label">Roll:</span>
+                  <span class="name">${currentStudent.roll || 'N/A'}</span>
+                </div>
+                <div>
+                  <span class="label">Class:</span>
+                  <span class="name">${currentStudent.class || 'N/A'}</span>
+                </div>
               </div>
             ` : ''}
             
