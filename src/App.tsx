@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QuizProvider } from "./context/QuizContext";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Pages
 import Index from "./pages/Index";
 import Quiz from "./pages/Quiz";
 import Leaderboard from "./pages/Leaderboard";
