@@ -17,9 +17,16 @@ export interface Question {
 export interface Student {
   id: string;
   name: string;
+  rollNumber: string;
+  class: string;
   score: number;
   totalQuestions: number;
   correctAnswers: number;
+}
+
+export interface Teacher {
+  username: string;
+  password: string;
 }
 
 export interface QuizContextType {
@@ -28,17 +35,18 @@ export interface QuizContextType {
   difficulty: Difficulty;
   operation: Operation;
   students: Student[];
-  isAdmin: boolean;
+  isTeacher: boolean;
   customQuestions: Question[];
   questionHistory: Question[];
   generateNewQuestion: () => void;
   checkAnswer: (selectedAnswer: number) => boolean;
   setDifficulty: (difficulty: Difficulty) => void;
   setOperation: (operation: Operation) => void;
-  toggleAdmin: () => void;
+  teacherLogin: (username: string, password: string) => boolean;
+  teacherLogout: () => void;
   addCustomQuestion: (question: Omit<Question, 'id'>) => void;
   removeCustomQuestion: (id: string) => void;
-  saveStudent: (name: string) => void;
+  saveStudent: (name: string, rollNumber: string, studentClass: string) => void;
   currentStudent: Student | null;
   resetQuiz: () => void;
 }
@@ -49,14 +57,15 @@ const defaultContext: QuizContextType = {
   difficulty: 'easy',
   operation: 'addition',
   students: [],
-  isAdmin: false,
+  isTeacher: false,
   customQuestions: [],
   questionHistory: [],
   generateNewQuestion: () => {},
   checkAnswer: () => false,
   setDifficulty: () => {},
   setOperation: () => {},
-  toggleAdmin: () => {},
+  teacherLogin: () => false,
+  teacherLogout: () => {},
   addCustomQuestion: () => {},
   removeCustomQuestion: () => {},
   saveStudent: () => {},
@@ -73,11 +82,17 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [score, setScore] = useState(0);
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [operation, setOperation] = useState<Operation>('addition');
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
   const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
   const [questionHistory, setQuestionHistory] = useState<Question[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+
+  // Predefined teacher credentials
+  const teacherCredentials: Teacher = {
+    username: 'teacher',
+    password: 'admin123'
+  };
 
   // Load data from localStorage on initial render
   useEffect(() => {
@@ -184,8 +199,20 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return isCorrect;
   };
 
-  const toggleAdmin = () => {
-    setIsAdmin(prev => !prev);
+  const teacherLogin = (username: string, password: string) => {
+    const isValid = username === teacherCredentials.username && password === teacherCredentials.password;
+    
+    if (isValid) {
+      setIsTeacher(true);
+      // Reset current student when teacher logs in
+      setCurrentStudent(null);
+    }
+    
+    return isValid;
+  };
+
+  const teacherLogout = () => {
+    setIsTeacher(false);
   };
 
   const addCustomQuestion = (question: Omit<Question, 'id'>) => {
@@ -201,9 +228,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCustomQuestions(prev => prev.filter(q => q.id !== id));
   };
 
-  const saveStudent = (name: string) => {
-    // Check if student already exists
-    const existingStudent = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+  const saveStudent = (name: string, rollNumber: string, studentClass: string) => {
+    // Check if student already exists by roll number
+    const existingStudent = students.find(s => s.rollNumber === rollNumber);
     
     if (existingStudent) {
       setCurrentStudent(existingStudent);
@@ -212,6 +239,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newStudent: Student = {
         id: Date.now().toString(),
         name,
+        rollNumber,
+        class: studentClass,
         score: 0,
         totalQuestions: 0,
         correctAnswers: 0
@@ -239,14 +268,15 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     difficulty,
     operation,
     students,
-    isAdmin,
+    isTeacher,
     customQuestions,
     questionHistory,
     generateNewQuestion,
     checkAnswer,
     setDifficulty,
     setOperation,
-    toggleAdmin,
+    teacherLogin,
+    teacherLogout,
     addCustomQuestion,
     removeCustomQuestion,
     saveStudent,

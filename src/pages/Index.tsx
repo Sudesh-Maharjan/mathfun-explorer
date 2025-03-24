@@ -1,14 +1,14 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Calculator, Award, Plus, Minus, X, Divide } from 'lucide-react';
+import { Calculator, Award, Plus, Minus, X, Divide, LogIn, User } from 'lucide-react';
 import { useQuiz } from '../context/QuizContext';
 import Header from '../components/Header';
 import LeaderboardCard from '../components/LeaderboardCard';
+import StudentRegistration from '../components/StudentRegistration';
 
 const operationIcons = [
   { icon: Plus, color: 'bg-blue-500', name: 'Addition' },
@@ -18,16 +18,7 @@ const operationIcons = [
 ];
 
 const Index = () => {
-  const { students, saveStudent } = useQuiz();
-  const [studentName, setStudentName] = useState('');
-
-  const handleNameSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (studentName.trim()) {
-      saveStudent(studentName);
-      setStudentName('');
-    }
-  };
+  const { students, isTeacher } = useQuiz();
 
   // Animation variants
   const container = {
@@ -79,25 +70,32 @@ const Index = () => {
                   multiplication, and division while tracking your progress!
                 </p>
                 
-                <div className="flex flex-wrap gap-4 mb-8">
-                  <form onSubmit={handleNameSubmit} className="w-full sm:w-auto flex gap-2">
-                    <Input
-                      value={studentName}
-                      onChange={(e) => setStudentName(e.target.value)}
-                      placeholder="Enter your name"
-                      className="min-w-[200px]"
-                    />
-                    <Button type="submit" disabled={!studentName.trim()}>
-                      Start
-                    </Button>
-                  </form>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  <div className="p-4 bg-background/60 rounded-lg border">
+                    <h2 className="text-lg font-semibold mb-3 flex items-center">
+                      <User className="mr-2 h-5 w-5 text-primary" />
+                      For Students
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Register with your details to play math games and track your progress!
+                    </p>
+                    <Link to="/register" className="w-full">
+                      <Button className="w-full">Register & Play</Button>
+                    </Link>
+                  </div>
                   
-                  <Link to="/quiz" className="w-full sm:w-auto">
-                    <Button variant="outline" className="w-full sm:w-auto">
-                      <Calculator className="mr-2 h-4 w-4" />
-                      Play as Guest
-                    </Button>
-                  </Link>
+                  <div className="p-4 bg-background/60 rounded-lg border">
+                    <h2 className="text-lg font-semibold mb-3 flex items-center">
+                      <LogIn className="mr-2 h-5 w-5 text-primary" />
+                      For Teachers
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Login to view student performance, manage questions, and more.
+                    </p>
+                    <Link to="/login" className="w-full">
+                      <Button variant="outline" className="w-full">Teacher Login</Button>
+                    </Link>
+                  </div>
                 </div>
                 
                 <h2 className="text-lg font-medium mb-4">Practice your skills:</h2>

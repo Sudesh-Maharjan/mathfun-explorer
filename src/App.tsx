@@ -14,6 +14,10 @@ import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
+// Auth Components
+import TeacherLogin from "./components/TeacherLogin";
+import StudentRegistration from "./components/StudentRegistration";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -29,6 +33,8 @@ const App = () => (
               <Route path="/quiz" element={<Quiz />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/login" element={<TeacherLogin />} />
+              <Route path="/register" element={<StudentRegistration />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>

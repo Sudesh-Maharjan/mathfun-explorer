@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
-import { Calculator, Medal, Home, Settings, LucideIcon } from 'lucide-react';
+import { Calculator, Medal, Home, Settings, LogIn, LogOut, User, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
@@ -40,9 +40,15 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, current }) => 
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const { isAdmin, toggleAdmin, currentStudent } = useQuiz();
+  const navigate = useNavigate();
+  const { isTeacher, teacherLogout, currentStudent } = useQuiz();
   
   const path = location.pathname;
+
+  const handleLogout = () => {
+    teacherLogout();
+    navigate('/');
+  };
 
   return (
     <motion.header 
@@ -71,8 +77,8 @@ const Header: React.FC = () => {
           <NavItem to="/" icon={Home} label="Home" current={path === "/"} />
           <NavItem to="/quiz" icon={Calculator} label="Play" current={path === "/quiz"} />
           <NavItem to="/leaderboard" icon={Medal} label="Leaderboard" current={path === "/leaderboard"} />
-          {isAdmin && (
-            <NavItem to="/admin" icon={Settings} label="Admin" current={path === "/admin"} />
+          {isTeacher && (
+            <NavItem to="/admin" icon={Settings} label="Teacher Panel" current={path === "/admin"} />
           )}
         </nav>
         
@@ -80,18 +86,32 @@ const Header: React.FC = () => {
           {currentStudent && (
             <div className="text-sm font-medium hidden sm:block">
               <span className="text-muted-foreground">Student:</span>{" "}
-              <span className="text-foreground">{currentStudent.name}</span>
+              <span className="text-foreground">{currentStudent.name} ({currentStudent.rollNumber}, {currentStudent.class})</span>
             </div>
           )}
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleAdmin}
-            className="text-xs"
-          >
-            {isAdmin ? "Exit Admin" : "Admin Mode"}
-          </Button>
+          {isTeacher ? (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="text-xs"
+            >
+              <LogOut size={16} className="mr-1" />
+              Logout
+            </Button>
+          ) : (
+            <Link to="/login">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs"
+              >
+                <LogIn size={16} className="mr-1" />
+                Teacher Login
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
       
@@ -110,10 +130,16 @@ const Header: React.FC = () => {
             <Medal size={20} />
             <span>Scores</span>
           </Link>
-          {isAdmin && (
+          {isTeacher && (
             <Link to="/admin" className={`flex flex-col items-center text-xs ${path === "/admin" ? "text-primary" : "text-muted-foreground"}`}>
               <Settings size={20} />
-              <span>Admin</span>
+              <span>Teacher</span>
+            </Link>
+          )}
+          {!isTeacher && (
+            <Link to="/login" className={`flex flex-col items-center text-xs ${path === "/login" ? "text-primary" : "text-muted-foreground"}`}>
+              <User size={20} />
+              <span>Login</span>
             </Link>
           )}
         </div>

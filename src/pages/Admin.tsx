@@ -7,11 +7,21 @@ import { useQuiz } from '../context/QuizContext';
 import Header from '../components/Header';
 import AdminPanel from '../components/AdminPanel';
 import { Settings, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const Admin = () => {
-  const { students, isAdmin } = useQuiz();
+  const { students, isTeacher } = useQuiz();
+  const navigate = useNavigate();
 
-  if (!isAdmin) {
+  // Redirect if not teacher
+  useEffect(() => {
+    if (!isTeacher) {
+      navigate('/login');
+    }
+  }, [isTeacher, navigate]);
+
+  if (!isTeacher) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -22,12 +32,12 @@ const Admin = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl text-center">Access Restricted</CardTitle>
                 <CardDescription className="text-center">
-                  You need admin access to view this page.
+                  You need teacher access to view this page.
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-center py-6">
                 <Settings className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p>Please enable admin mode from the header to access the admin panel.</p>
+                <p>Please login as a teacher to access this panel.</p>
               </CardContent>
             </Card>
           </div>
@@ -47,7 +57,7 @@ const Admin = () => {
           transition={{ duration: 0.4 }}
           className="max-w-4xl mx-auto"
         >
-          <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+          <h1 className="text-3xl font-bold mb-6">Teacher Panel</h1>
           
           <Tabs defaultValue="questions">
             <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -79,6 +89,8 @@ const Admin = () => {
                       <thead>
                         <tr className="border-b">
                           <th className="text-left py-2 px-3 font-medium">Name</th>
+                          <th className="text-left py-2 px-3 font-medium">Roll Number</th>
+                          <th className="text-left py-2 px-3 font-medium">Class</th>
                           <th className="text-center py-2 px-3 font-medium">Score</th>
                           <th className="text-center py-2 px-3 font-medium">Questions Attempted</th>
                           <th className="text-center py-2 px-3 font-medium">Correct Answers</th>
@@ -88,7 +100,7 @@ const Admin = () => {
                       <tbody>
                         {students.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="text-center py-6 text-muted-foreground">
+                            <td colSpan={7} className="text-center py-6 text-muted-foreground">
                               No student data available
                             </td>
                           </tr>
@@ -101,6 +113,8 @@ const Admin = () => {
                             return (
                               <tr key={student.id} className="border-b hover:bg-muted/20">
                                 <td className="py-2 px-3 font-medium">{student.name}</td>
+                                <td className="py-2 px-3">{student.rollNumber}</td>
+                                <td className="py-2 px-3">{student.class}</td>
                                 <td className="py-2 px-3 text-center">{student.score}</td>
                                 <td className="py-2 px-3 text-center">{student.totalQuestions}</td>
                                 <td className="py-2 px-3 text-center">{student.correctAnswers}</td>
