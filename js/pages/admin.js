@@ -20,7 +20,7 @@ const AdminPage = (function() {
               </div>
               <div class="card-content text-center">
                 <i class="fas fa-cog access-denied-icon"></i>
-                <p>Please login as a teacher to access the admin panel.</p>
+                <p>Please enable admin mode from the header to access the admin panel.</p>
               </div>
             </div>
           </div>
@@ -32,7 +32,7 @@ const AdminPage = (function() {
     // Create tabs content
     const adminPageContent = `
       <div class="container admin-container">
-        <h1>Teacher Admin Panel</h1>
+        <h1>Admin Panel</h1>
         
         <div class="tabs">
           <div class="tab-list">
@@ -166,8 +166,6 @@ const AdminPage = (function() {
                       <thead>
                         <tr>
                           <th>Name</th>
-                          <th>Roll Number</th>
-                          <th>Class</th>
                           <th>Score</th>
                           <th>Questions Attempted</th>
                           <th>Correct Answers</th>
@@ -403,7 +401,7 @@ const AdminPage = (function() {
     if (students.length === 0) {
       container.innerHTML = `
         <tr>
-          <td colspan="7" class="empty-state">
+          <td colspan="5" class="empty-state">
             No student data available
           </td>
         </tr>
@@ -421,8 +419,6 @@ const AdminPage = (function() {
       studentRows += `
         <tr>
           <td>${student.name}</td>
-          <td>${student.roll || 'N/A'}</td>
-          <td>${student.class || 'N/A'}</td>
           <td>${student.score}</td>
           <td>${student.totalQuestions}</td>
           <td>${student.correctAnswers}</td>

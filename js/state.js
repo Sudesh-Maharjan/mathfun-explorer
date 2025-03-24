@@ -152,9 +152,9 @@ const State = (function() {
   };
 
   // Save a student
-  const saveStudent = (name, roll, className) => {
-    // Check if student already exists by roll number
-    const existingStudent = students.find(s => s.roll && s.roll.toLowerCase() === roll.toLowerCase());
+  const saveStudent = (name) => {
+    // Check if student already exists
+    const existingStudent = students.find(s => s.name.toLowerCase() === name.toLowerCase());
     
     if (existingStudent) {
       currentStudent = existingStudent;
@@ -163,8 +163,6 @@ const State = (function() {
       const newStudent = {
         id: Date.now().toString(),
         name,
-        roll,
-        class: className,
         score: 0,
         totalQuestions: 0,
         correctAnswers: 0

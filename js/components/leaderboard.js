@@ -67,13 +67,7 @@ const LeaderboardComponent = (function() {
           <div class="leaderboard-item ${rankClass}">
             <div class="student-info">
               <div class="rank">${rankIcon}</div>
-              <div>
-                <div class="student-name">${student.name}</div>
-                <div class="student-details">
-                  ${student.roll ? `Roll: ${student.roll}` : ''} 
-                  ${student.class ? `Class: ${student.class}` : ''}
-                </div>
-              </div>
+              <div class="student-name">${student.name}</div>
             </div>
             <div class="student-stats">
               <div class="accuracy">${accuracy}% accuracy</div>
