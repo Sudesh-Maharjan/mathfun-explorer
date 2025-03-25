@@ -170,8 +170,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     
     // If no questions, default to addition and easy
-    const ops = operations.size > 0 ? Array.from(operations) : ['addition'];
-    const diffs = difficulties.size > 0 ? Array.from(difficulties) : ['easy'];
+    const ops = operations.size > 0 ? Array.from(operations) : ['addition' as Operation];
+    const diffs = difficulties.size > 0 ? Array.from(difficulties) : ['easy' as Difficulty];
     
     setAvailableOperations(ops);
     setAvailableDifficulties(diffs);
