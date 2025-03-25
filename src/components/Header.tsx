@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
-import { Calculator, Medal, Home, Settings, LogIn, LogOut, User, LucideIcon } from 'lucide-react';
+import { Calculator, Medal, Home, Settings, LogIn, LogOut, User, LucideIcon, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
@@ -75,7 +75,7 @@ const Header: React.FC = () => {
         
         <nav className="hidden md:flex items-center space-x-1">
           <NavItem to="/" icon={Home} label="Home" current={path === "/"} />
-          <NavItem to="/quiz" icon={Calculator} label="Play" current={path === "/quiz"} />
+          <NavItem to="/quiz" icon={currentStudent ? Play : Calculator} label={currentStudent ? "Play" : "Quiz"} current={path === "/quiz"} />
           <NavItem to="/leaderboard" icon={Medal} label="Leaderboard" current={path === "/leaderboard"} />
           {isTeacher && (
             <NavItem to="/admin" icon={Settings} label="Teacher Panel" current={path === "/admin"} />
@@ -101,16 +101,18 @@ const Header: React.FC = () => {
               Logout
             </Button>
           ) : (
-            <Link to="/login">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs"
-              >
-                <LogIn size={16} className="mr-1" />
-                Teacher Login
-              </Button>
-            </Link>
+            !currentStudent && (
+              <Link to="/login">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs"
+                >
+                  <LogIn size={16} className="mr-1" />
+                  Teacher Login
+                </Button>
+              </Link>
+            )
           )}
         </div>
       </div>
@@ -123,8 +125,8 @@ const Header: React.FC = () => {
             <span>Home</span>
           </Link>
           <Link to="/quiz" className={`flex flex-col items-center text-xs ${path === "/quiz" ? "text-primary" : "text-muted-foreground"}`}>
-            <Calculator size={20} />
-            <span>Play</span>
+            {currentStudent ? <Play size={20} /> : <Calculator size={20} />}
+            <span>{currentStudent ? "Play" : "Quiz"}</span>
           </Link>
           <Link to="/leaderboard" className={`flex flex-col items-center text-xs ${path === "/leaderboard" ? "text-primary" : "text-muted-foreground"}`}>
             <Medal size={20} />
@@ -136,7 +138,7 @@ const Header: React.FC = () => {
               <span>Teacher</span>
             </Link>
           )}
-          {!isTeacher && (
+          {!isTeacher && !currentStudent && (
             <Link to="/login" className={`flex flex-col items-center text-xs ${path === "/login" ? "text-primary" : "text-muted-foreground"}`}>
               <User size={20} />
               <span>Login</span>
