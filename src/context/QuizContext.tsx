@@ -1,6 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { generateQuestion } from '../utils/questionGenerator';
+import { toast } from "@/hooks/use-toast";
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division';
@@ -106,7 +106,6 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [availableOperations, setAvailableOperations] = useState<Operation[]>(['addition']);
   const [availableDifficulties, setAvailableDifficulties] = useState<Difficulty[]>(['easy']);
 
-  // Load teachers from local storage
   useEffect(() => {
     const savedTeachers = localStorage.getItem('mathQuizTeachers');
     if (savedTeachers) {
@@ -124,7 +123,6 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Load students and custom questions from local storage
   useEffect(() => {
     const savedStudents = localStorage.getItem('mathQuizStudents');
     if (savedStudents) {
@@ -136,30 +134,24 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const loadedQuestions = JSON.parse(savedCustomQuestions) as Question[];
       setCustomQuestions(loadedQuestions);
       
-      // Update available operations and difficulties based on loaded questions
       updateAvailableOptions(loadedQuestions);
     }
   }, []);
 
-  // Save students to local storage when they change
   useEffect(() => {
     localStorage.setItem('mathQuizStudents', JSON.stringify(students));
   }, [students]);
 
-  // Save custom questions to local storage when they change
   useEffect(() => {
     localStorage.setItem('mathQuizCustomQuestions', JSON.stringify(customQuestions));
     
-    // Update available operations and difficulties when custom questions change
     updateAvailableOptions(customQuestions);
   }, [customQuestions]);
 
-  // Save teachers to local storage when they change
   useEffect(() => {
     localStorage.setItem('mathQuizTeachers', JSON.stringify(teachers));
   }, [teachers]);
 
-  // Update available operations and difficulties based on custom questions
   const updateAvailableOptions = (questions: Question[]) => {
     const operations = new Set<Operation>();
     const difficulties = new Set<Difficulty>();
@@ -169,14 +161,12 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       difficulties.add(q.difficulty);
     });
     
-    // If no questions, default to addition and easy
     const ops = operations.size > 0 ? Array.from(operations) : ['addition' as Operation];
     const diffs = difficulties.size > 0 ? Array.from(difficulties) : ['easy' as Difficulty];
     
     setAvailableOperations(ops);
     setAvailableDifficulties(diffs);
     
-    // If current selections aren't available, update them
     if (!ops.includes(operation)) {
       setOperation(ops[0]);
     }
@@ -187,37 +177,39 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const generateNewQuestion = () => {
-    // Filter questions by current operation and difficulty
     const filteredQuestions = customQuestions.filter(
       q => q.operation === operation && q.difficulty === difficulty
     );
     
-    // If no custom questions available, use default generated questions
     if (filteredQuestions.length === 0) {
-      const fallbackQuestion = generateQuestion(operation, difficulty);
-      setCurrentQuestion(fallbackQuestion);
-      setQuestionHistory(prev => {
-        const updated = [fallbackQuestion, ...prev];
-        return updated.slice(0, 20);
+      toast({
+        title: "No questions available",
+        description: `No ${difficulty} ${operation} questions found. Please ask a teacher to add some.`,
+        variant: "destructive",
       });
-      console.log("No custom questions available, using generated question");
+      setCurrentQuestion(null);
+      console.log(`No ${difficulty} ${operation} questions found. Please ask a teacher to add some.`);
       return;
     }
     
-    // Get a random question from filtered questions
+    if (filteredQuestions.length < 10 && questionHistory.length === 0) {
+      toast({
+        title: "Limited Questions",
+        description: `Only ${filteredQuestions.length} questions available. A full quiz needs at least 10 questions.`,
+        variant: "default",
+      });
+    }
+    
     const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
     const newQuestion = filteredQuestions[randomIndex];
     
-    // Check if this question was recently used (within last 5 questions)
     const isRepeat = questionHistory.slice(0, 5).some(q => q.id === newQuestion.id);
     
     if (isRepeat && filteredQuestions.length > 1) {
-      // Try again if it's a repeat and we have other options
       generateNewQuestion();
       return;
     }
     
-    // Update question history
     setQuestionHistory(prev => {
       const updated = [newQuestion, ...prev];
       return updated.slice(0, 20);

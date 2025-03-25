@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +11,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQuiz, Difficulty, Operation } from '../context/QuizContext';
 import Header from '../components/Header';
 import QuizCard from '../components/QuizCard';
@@ -20,12 +22,14 @@ import {
   Divide, 
   RefreshCw, 
   Trophy, 
-  BarChart3, 
+  BarChart3,
+  AlertCircle,
   ChevronRight, 
   ChevronLeft 
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import {
   AreaChart,
   Area,
@@ -99,12 +103,14 @@ const Quiz = () => {
     customQuestions
   } = useQuiz();
   
+  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [quizStarted, setQuizStarted] = useState(false);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [completedQuiz, setCompletedQuiz] = useState(false);
   const [quizResults, setQuizResults] = useState<Array<{ question: string; correct: boolean }>>([]);
+  const [hasEnoughQuestions, setHasEnoughQuestions] = useState(false);
 
   useEffect(() => {
     // Check search params for initial operation
@@ -117,9 +123,37 @@ const Quiz = () => {
     }
   }, [searchParams, setOperation, availableOperations]);
 
+  // Check if we have enough questions for the selected operation and difficulty
+  useEffect(() => {
+    const filteredQuestions = customQuestions.filter(
+      q => q.operation === operation && q.difficulty === difficulty
+    );
+    
+    setHasEnoughQuestions(filteredQuestions.length >= 10);
+  }, [operation, difficulty, customQuestions]);
+
   const handleStartQuiz = () => {
     // Don't allow starting the quiz if there are no custom questions
     if (customQuestions.length === 0) {
+      toast({
+        title: "No questions available",
+        description: "Please wait for a teacher to add questions.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Filter questions for the selected operation and difficulty
+    const filteredQuestions = customQuestions.filter(
+      q => q.operation === operation && q.difficulty === difficulty
+    );
+    
+    if (filteredQuestions.length === 0) {
+      toast({
+        title: "No questions available",
+        description: `No ${difficulty} ${operation} questions found. Please select a different operation or difficulty.`,
+        variant: "destructive",
+      });
       return;
     }
     
@@ -176,6 +210,9 @@ const Quiz = () => {
 
   // Check if we have any questions available
   const hasQuestions = customQuestions.length > 0;
+  const hasQuestionsForCurrent = customQuestions.filter(
+    q => q.operation === operation && q.difficulty === difficulty
+  ).length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,6 +273,28 @@ const Quiz = () => {
                       ))}
                     </div>
                   </div>
+                  
+                  {!hasQuestionsForCurrent && (
+                    <Alert variant="destructive" className="mt-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>No questions available</AlertTitle>
+                      <AlertDescription>
+                        There are no questions for {difficulty} {operation}.
+                        Please select a different operation or difficulty, or ask a teacher to add more questions.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {hasQuestionsForCurrent && !hasEnoughQuestions && (
+                    <Alert className="mt-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Limited Questions</AlertTitle>
+                      <AlertDescription>
+                        There are less than 10 questions available for {difficulty} {operation}.
+                        You can still play, but questions might repeat.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               ) : (
                 <div className="py-8 text-center">
@@ -249,7 +308,7 @@ const Quiz = () => {
               <Button 
                 size="lg" 
                 onClick={handleStartQuiz}
-                disabled={!hasQuestions}
+                disabled={!hasQuestionsForCurrent}
               >
                 Start Quiz
               </Button>
@@ -436,6 +495,23 @@ const Quiz = () => {
                     onAnswerSelected={handleAnswerSelected}
                     onNextQuestion={handleNextQuestion}
                   />
+                )}
+                
+                {!currentQuestion && (
+                  <Card className="glass-card">
+                    <CardHeader>
+                      <CardTitle>No Questions Available</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p>There are no questions available for {difficulty} {operation}.</p>
+                      <p>Please select a different operation or difficulty, or ask a teacher to add more questions.</p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button onClick={() => setQuizStarted(false)}>
+                        Back to Options
+                      </Button>
+                    </CardFooter>
+                  </Card>
                 )}
               </motion.div>
             </AnimatePresence>
