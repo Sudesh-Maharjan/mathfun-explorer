@@ -41,12 +41,17 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, current }) => 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isTeacher, teacherLogout, currentStudent } = useQuiz();
+  const { isTeacher, teacherLogout, currentStudent, studentLogout } = useQuiz();
   
   const path = location.pathname;
 
-  const handleLogout = () => {
+  const handleTeacherLogout = () => {
     teacherLogout();
+    navigate('/');
+  };
+
+  const handleStudentLogout = () => {
+    studentLogout();
     navigate('/');
   };
 
@@ -94,25 +99,33 @@ const Header: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={handleLogout}
+              onClick={handleTeacherLogout}
+              className="text-xs"
+            >
+              <LogOut size={16} className="mr-1" />
+              Logout
+            </Button>
+          ) : currentStudent ? (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleStudentLogout}
               className="text-xs"
             >
               <LogOut size={16} className="mr-1" />
               Logout
             </Button>
           ) : (
-            !currentStudent && (
-              <Link to="/login">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs"
-                >
-                  <LogIn size={16} className="mr-1" />
-                  Teacher Login
-                </Button>
-              </Link>
-            )
+            <Link to="/login">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs"
+              >
+                <LogIn size={16} className="mr-1" />
+                Teacher Login
+              </Button>
+            </Link>
           )}
         </div>
       </div>
@@ -143,6 +156,15 @@ const Header: React.FC = () => {
               <User size={20} />
               <span>Login</span>
             </Link>
+          )}
+          {currentStudent && (
+            <button 
+              onClick={handleStudentLogout}
+              className={`flex flex-col items-center text-xs text-muted-foreground`}
+            >
+              <LogOut size={20} />
+              <span>Logout</span>
+            </button>
           )}
         </div>
       </div>

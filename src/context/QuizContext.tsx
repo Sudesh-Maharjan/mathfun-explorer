@@ -52,6 +52,7 @@ export interface QuizContextType {
   removeCustomQuestion: (id: string) => void;
   saveStudent: (name: string, rollNumber: string, studentClass: string) => void;
   studentLogin: (rollNumber: string) => boolean;
+  studentLogout: () => void;
   currentStudent: Student | null;
   resetQuiz: () => void;
 }
@@ -77,6 +78,7 @@ const defaultContext: QuizContextType = {
   removeCustomQuestion: () => {},
   saveStudent: () => {},
   studentLogin: () => false,
+  studentLogout: () => {},
   currentStudent: null,
   resetQuiz: () => {},
 };
@@ -293,6 +295,11 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
+  const studentLogout = () => {
+    setCurrentStudent(null);
+    setScore(0);
+  };
+
   const resetQuiz = () => {
     setScore(0);
     setQuestionHistory([]);
@@ -324,6 +331,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeCustomQuestion,
     saveStudent,
     studentLogin,
+    studentLogout,
     currentStudent,
     resetQuiz,
   };
