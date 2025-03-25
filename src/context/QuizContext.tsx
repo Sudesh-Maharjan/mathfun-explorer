@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { generateQuestion } from '../utils/questionGenerator';
 
@@ -41,6 +42,8 @@ export interface QuizContextType {
   isTeacher: boolean;
   customQuestions: Question[];
   questionHistory: Question[];
+  availableOperations: Operation[];
+  availableDifficulties: Difficulty[];
   generateNewQuestion: () => void;
   checkAnswer: (selectedAnswer: number) => boolean;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -67,6 +70,8 @@ const defaultContext: QuizContextType = {
   isTeacher: false,
   customQuestions: [],
   questionHistory: [],
+  availableOperations: ['addition'],
+  availableDifficulties: ['easy'],
   generateNewQuestion: () => {},
   checkAnswer: () => false,
   setDifficulty: () => {},
@@ -98,7 +103,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [students, setStudents] = useState<Student[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const [availableOperations, setAvailableOperations] = useState<Operation[]>(['addition']);
+  const [availableDifficulties, setAvailableDifficulties] = useState<Difficulty[]>(['easy']);
 
+  // Load teachers from local storage
   useEffect(() => {
     const savedTeachers = localStorage.getItem('mathQuizTeachers');
     if (savedTeachers) {
@@ -116,6 +124,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  // Load students and custom questions from local storage
   useEffect(() => {
     const savedStudents = localStorage.getItem('mathQuizStudents');
     if (savedStudents) {
@@ -124,54 +133,96 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const savedCustomQuestions = localStorage.getItem('mathQuizCustomQuestions');
     if (savedCustomQuestions) {
-      setCustomQuestions(JSON.parse(savedCustomQuestions));
+      const loadedQuestions = JSON.parse(savedCustomQuestions) as Question[];
+      setCustomQuestions(loadedQuestions);
+      
+      // Update available operations and difficulties based on loaded questions
+      updateAvailableOptions(loadedQuestions);
     }
   }, []);
 
+  // Save students to local storage when they change
   useEffect(() => {
     localStorage.setItem('mathQuizStudents', JSON.stringify(students));
   }, [students]);
 
+  // Save custom questions to local storage when they change
   useEffect(() => {
     localStorage.setItem('mathQuizCustomQuestions', JSON.stringify(customQuestions));
+    
+    // Update available operations and difficulties when custom questions change
+    updateAvailableOptions(customQuestions);
   }, [customQuestions]);
 
+  // Save teachers to local storage when they change
   useEffect(() => {
     localStorage.setItem('mathQuizTeachers', JSON.stringify(teachers));
   }, [teachers]);
 
+  // Update available operations and difficulties based on custom questions
+  const updateAvailableOptions = (questions: Question[]) => {
+    const operations = new Set<Operation>();
+    const difficulties = new Set<Difficulty>();
+    
+    questions.forEach(q => {
+      operations.add(q.operation);
+      difficulties.add(q.difficulty);
+    });
+    
+    // If no questions, default to addition and easy
+    const ops = operations.size > 0 ? Array.from(operations) : ['addition'];
+    const diffs = difficulties.size > 0 ? Array.from(difficulties) : ['easy'];
+    
+    setAvailableOperations(ops);
+    setAvailableDifficulties(diffs);
+    
+    // If current selections aren't available, update them
+    if (!ops.includes(operation)) {
+      setOperation(ops[0]);
+    }
+    
+    if (!diffs.includes(difficulty)) {
+      setDifficulty(diffs[0]);
+    }
+  };
+
   const generateNewQuestion = () => {
-    const filteredCustomQuestions = customQuestions.filter(
+    // Filter questions by current operation and difficulty
+    const filteredQuestions = customQuestions.filter(
       q => q.operation === operation && q.difficulty === difficulty
     );
-
-    let newQuestion;
-
-    if (filteredCustomQuestions.length > 0) {
-      const useCustom = Math.random() < 0.3;
-      
-      if (useCustom) {
-        const randomIndex = Math.floor(Math.random() * filteredCustomQuestions.length);
-        newQuestion = filteredCustomQuestions[randomIndex];
-      } else {
-        newQuestion = generateQuestion(operation, difficulty);
-      }
-    } else {
-      newQuestion = generateQuestion(operation, difficulty);
-    }
-
-    const isRepeat = questionHistory.some(q => q.question === newQuestion.question);
     
-    if (isRepeat && questionHistory.length < 20) {
+    // If no custom questions available, use default generated questions
+    if (filteredQuestions.length === 0) {
+      const fallbackQuestion = generateQuestion(operation, difficulty);
+      setCurrentQuestion(fallbackQuestion);
+      setQuestionHistory(prev => {
+        const updated = [fallbackQuestion, ...prev];
+        return updated.slice(0, 20);
+      });
+      console.log("No custom questions available, using generated question");
+      return;
+    }
+    
+    // Get a random question from filtered questions
+    const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
+    const newQuestion = filteredQuestions[randomIndex];
+    
+    // Check if this question was recently used (within last 5 questions)
+    const isRepeat = questionHistory.slice(0, 5).some(q => q.id === newQuestion.id);
+    
+    if (isRepeat && filteredQuestions.length > 1) {
+      // Try again if it's a repeat and we have other options
       generateNewQuestion();
       return;
     }
-
+    
+    // Update question history
     setQuestionHistory(prev => {
       const updated = [newQuestion, ...prev];
       return updated.slice(0, 20);
     });
-
+    
     setCurrentQuestion(newQuestion);
   };
 
@@ -320,6 +371,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isTeacher,
     customQuestions,
     questionHistory,
+    availableOperations,
+    availableDifficulties,
     generateNewQuestion,
     checkAnswer,
     setDifficulty,

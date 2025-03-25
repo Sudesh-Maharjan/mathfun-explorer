@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -73,6 +72,16 @@ const OperationButton: React.FC<{
   </Button>
 );
 
+const getOperationIcon = (operation: Operation) => {
+  switch (operation) {
+    case 'addition': return <Plus size={16} />;
+    case 'subtraction': return <Minus size={16} />;
+    case 'multiplication': return <X size={16} />;
+    case 'division': return <Divide size={16} />;
+    default: return <Plus size={16} />;
+  }
+};
+
 const Quiz = () => {
   const { 
     currentQuestion, 
@@ -85,6 +94,9 @@ const Quiz = () => {
     checkAnswer,
     resetQuiz,
     currentStudent,
+    availableOperations,
+    availableDifficulties,
+    customQuestions
   } = useQuiz();
   
   const [searchParams] = useSearchParams();
@@ -98,24 +110,19 @@ const Quiz = () => {
     // Check search params for initial operation
     const opParam = searchParams.get('op');
     if (opParam) {
-      switch(opParam.toLowerCase()) {
-        case 'addition':
-          setOperation('addition');
-          break;
-        case 'subtraction':
-          setOperation('subtraction');
-          break;
-        case 'multiplication':
-          setOperation('multiplication');
-          break;
-        case 'division':
-          setOperation('division');
-          break;
+      const paramOperation = opParam.toLowerCase() as Operation;
+      if (availableOperations.includes(paramOperation)) {
+        setOperation(paramOperation);
       }
     }
-  }, [searchParams, setOperation]);
+  }, [searchParams, setOperation, availableOperations]);
 
   const handleStartQuiz = () => {
+    // Don't allow starting the quiz if there are no custom questions
+    if (customQuestions.length === 0) {
+      return;
+    }
+    
     setQuizStarted(true);
     resetQuiz();
     setQuestionsAnswered(0);
@@ -167,6 +174,9 @@ const Quiz = () => {
     cumulative: quizResults.slice(0, index + 1).filter(r => r.correct).length
   }));
 
+  // Check if we have any questions available
+  const hasQuestions = customQuestions.length > 0;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -177,65 +187,70 @@ const Quiz = () => {
             <CardHeader>
               <CardTitle className="text-2xl text-center">Ready to practice math?</CardTitle>
               <CardDescription className="text-center">
-                Choose your difficulty and operation to get started
+                {hasQuestions 
+                  ? 'Choose your difficulty and operation to get started' 
+                  : 'No questions available. Please wait for a teacher to add questions.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium mb-3">Select Difficulty:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <DifficultyBadge 
-                      difficulty="easy" 
-                      selected={difficulty === 'easy'} 
-                      onClick={() => setDifficulty('easy')} 
-                    />
-                    <DifficultyBadge 
-                      difficulty="medium" 
-                      selected={difficulty === 'medium'} 
-                      onClick={() => setDifficulty('medium')} 
-                    />
-                    <DifficultyBadge 
-                      difficulty="hard" 
-                      selected={difficulty === 'hard'} 
-                      onClick={() => setDifficulty('hard')} 
-                    />
+              {hasQuestions ? (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Select Difficulty:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {availableDifficulties.includes('easy') && (
+                        <DifficultyBadge 
+                          difficulty="easy" 
+                          selected={difficulty === 'easy'} 
+                          onClick={() => setDifficulty('easy')} 
+                        />
+                      )}
+                      {availableDifficulties.includes('medium') && (
+                        <DifficultyBadge 
+                          difficulty="medium" 
+                          selected={difficulty === 'medium'} 
+                          onClick={() => setDifficulty('medium')} 
+                        />
+                      )}
+                      {availableDifficulties.includes('hard') && (
+                        <DifficultyBadge 
+                          difficulty="hard" 
+                          selected={difficulty === 'hard'} 
+                          onClick={() => setDifficulty('hard')} 
+                        />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Select Operation:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {availableOperations.map(op => (
+                        <OperationButton 
+                          key={op}
+                          operation={op} 
+                          selected={operation === op} 
+                          onClick={() => setOperation(op)} 
+                          icon={getOperationIcon(op)}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-3">Select Operation:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <OperationButton 
-                      operation="addition" 
-                      selected={operation === 'addition'} 
-                      onClick={() => setOperation('addition')} 
-                      icon={<Plus size={16} />}
-                    />
-                    <OperationButton 
-                      operation="subtraction" 
-                      selected={operation === 'subtraction'} 
-                      onClick={() => setOperation('subtraction')} 
-                      icon={<Minus size={16} />}
-                    />
-                    <OperationButton 
-                      operation="multiplication" 
-                      selected={operation === 'multiplication'} 
-                      onClick={() => setOperation('multiplication')} 
-                      icon={<X size={16} />}
-                    />
-                    <OperationButton 
-                      operation="division" 
-                      selected={operation === 'division'} 
-                      onClick={() => setOperation('division')} 
-                      icon={<Divide size={16} />}
-                    />
-                  </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-muted-foreground">
+                    Once a teacher adds questions, you'll be able to start the quiz.
+                  </p>
                 </div>
-              </div>
+              )}
             </CardContent>
             <CardFooter className="flex justify-center">
-              <Button size="lg" onClick={handleStartQuiz}>
+              <Button 
+                size="lg" 
+                onClick={handleStartQuiz}
+                disabled={!hasQuestions}
+              >
                 Start Quiz
               </Button>
             </CardFooter>
@@ -360,21 +375,27 @@ const Quiz = () => {
             
             <div className="mb-6 flex justify-between items-center">
               <div className="flex flex-wrap gap-2">
-                <DifficultyBadge 
-                  difficulty="easy" 
-                  selected={difficulty === 'easy'} 
-                  onClick={() => setDifficulty('easy')} 
-                />
-                <DifficultyBadge 
-                  difficulty="medium" 
-                  selected={difficulty === 'medium'} 
-                  onClick={() => setDifficulty('medium')} 
-                />
-                <DifficultyBadge 
-                  difficulty="hard" 
-                  selected={difficulty === 'hard'} 
-                  onClick={() => setDifficulty('hard')} 
-                />
+                {availableDifficulties.includes('easy') && (
+                  <DifficultyBadge 
+                    difficulty="easy" 
+                    selected={difficulty === 'easy'} 
+                    onClick={() => setDifficulty('easy')} 
+                  />
+                )}
+                {availableDifficulties.includes('medium') && (
+                  <DifficultyBadge 
+                    difficulty="medium" 
+                    selected={difficulty === 'medium'} 
+                    onClick={() => setDifficulty('medium')} 
+                  />
+                )}
+                {availableDifficulties.includes('hard') && (
+                  <DifficultyBadge 
+                    difficulty="hard" 
+                    selected={difficulty === 'hard'} 
+                    onClick={() => setDifficulty('hard')} 
+                  />
+                )}
               </div>
               
               <div className="flex gap-1">
@@ -390,30 +411,15 @@ const Quiz = () => {
             </div>
             
             <div className="flex overflow-x-auto pb-2 mb-6 gap-2">
-              <OperationButton 
-                operation="addition" 
-                selected={operation === 'addition'} 
-                onClick={() => setOperation('addition')} 
-                icon={<Plus size={16} />}
-              />
-              <OperationButton 
-                operation="subtraction" 
-                selected={operation === 'subtraction'} 
-                onClick={() => setOperation('subtraction')} 
-                icon={<Minus size={16} />}
-              />
-              <OperationButton 
-                operation="multiplication" 
-                selected={operation === 'multiplication'} 
-                onClick={() => setOperation('multiplication')} 
-                icon={<X size={16} />}
-              />
-              <OperationButton 
-                operation="division" 
-                selected={operation === 'division'} 
-                onClick={() => setOperation('division')} 
-                icon={<Divide size={16} />}
-              />
+              {availableOperations.map(op => (
+                <OperationButton 
+                  key={op}
+                  operation={op} 
+                  selected={operation === op} 
+                  onClick={() => setOperation(op)} 
+                  icon={getOperationIcon(op)}
+                />
+              ))}
             </div>
             
             <AnimatePresence mode="wait">
