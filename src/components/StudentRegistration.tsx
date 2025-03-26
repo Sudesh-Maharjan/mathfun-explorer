@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserPlus } from 'lucide-react';
 import AuthLayout from './AuthLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
+import { post } from '@/api';
 const StudentRegistration: React.FC = () => {
   // Register state
   const [name, setName] = useState('');
@@ -23,57 +23,150 @@ const StudentRegistration: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleRegister = (e: React.FormEvent) => {
+  //   e.preventDefault();
     
-    if (!name.trim() || !rollNumber.trim() || !studentClass.trim()) {
+  //   if (!name.trim() || !rollNumber.trim() || !studentClass.trim()) {
+  //     toast({
+  //       title: "Registration Failed",
+  //       description: "Please fill in all fields",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+    
+  //   saveStudent(name, rollNumber, studentClass);
+    
+  //   toast({
+  //     title: "Registration Successful",
+  //     description: "You're ready to play!",
+  //   });
+    
+  //   navigate('/quiz');
+  // };
+//API handleRegister function
+const handleRegister = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!name.trim() || !rollNumber.trim() || !studentClass.trim()) {
+    toast({
+      title: "Registration Failed",
+      description: "Please fill in all fields",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  try {
+    console.log("Sending data:", { name, rollNumber, className: studentClass });
+    const response = await post('/register/student', {
+        name,
+        rollNumber,
+        className: studentClass,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      toast({
+        title: "Registration Successful",
+        description: "You're ready to play!",
+      });
+
+      navigate('/quiz');
+    } else {
       toast({
         title: "Registration Failed",
-        description: "Please fill in all fields",
+        description: data.message || "Something went wrong",
         variant: "destructive",
       });
-      return;
     }
-    
-    saveStudent(name, rollNumber, studentClass);
-    
+  } catch (error) {
     toast({
-      title: "Registration Successful",
-      description: "You're ready to play!",
+      title: "Registration Failed",
+      description: "Unable to connect to the server",
+      variant: "destructive",
     });
+  }
+};
+//API handleRegister function end
+  // const handleLogin = (e: React.FormEvent) => {
+  //   e.preventDefault();
     
-    navigate('/quiz');
-  };
+  //   if (!loginRollNumber.trim()) {
+  //     toast({
+  //       title: "Login Failed",
+  //       description: "Please enter your roll number",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+    
+  //   const success = studentLogin(loginRollNumber);
+    
+  //   if (success) {
+  //     toast({
+  //       title: "Login Successful",
+  //       description: "Welcome back! Ready to play?",
+  //     });
+  //     navigate('/quiz');
+  //   } else {
+  //     toast({
+  //       title: "Login Failed",
+  //       description: "Student not found. Please register first.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+//API handleLogin function
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!loginRollNumber.trim()) {
-      toast({
-        title: "Login Failed",
-        description: "Please enter your roll number",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const success = studentLogin(loginRollNumber);
-    
-    if (success) {
+  if (!loginRollNumber.trim()) {
+    toast({
+      title: "Login Failed",
+      description: "Please enter your roll number",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  try {
+    const response = await post('/login/student', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: loginRollNumber,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
       toast({
         title: "Login Successful",
         description: "Welcome back! Ready to play?",
       });
+
       navigate('/quiz');
     } else {
       toast({
         title: "Login Failed",
-        description: "Student not found. Please register first.",
+        description: data.message || "Invalid roll number. Please register first.",
         variant: "destructive",
       });
     }
-  };
-
+  } catch (error) {
+    toast({
+      title: "Login Failed",
+      description: "Unable to connect to the server",
+      variant: "destructive",
+    });
+  }
+};
+//API handleLogin function end
   return (
     <AuthLayout title="Student Portal">
       <Card className="glass-card max-w-md mx-auto">
