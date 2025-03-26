@@ -17,7 +17,7 @@ export interface Question {
 export interface Student {
   id: string;
   name: string;
-  rollNumber: string;
+  roll_number: string;
   class: string;
   score: number;
   totalQuestions: number;
@@ -53,8 +53,8 @@ export interface QuizContextType {
   registerTeacher: (name: string, email: string, username: string, password: string) => boolean;
   addCustomQuestion: (question: Omit<Question, 'id'>) => void;
   removeCustomQuestion: (id: string) => void;
-  saveStudent: (name: string, rollNumber: string, studentClass: string) => void;
-  studentLogin: (rollNumber: string) => boolean;
+  saveStudent: (name: string, roll_number: string, studentClass: string) => void;
+  studentLogin: (roll_number: string) => boolean;
   studentLogout: () => void;
   currentStudent: Student | null;
   resetQuiz: () => void;
@@ -304,8 +304,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCustomQuestions(prev => prev.filter(q => q.id !== id));
   };
 
-  const saveStudent = (name: string, rollNumber: string, studentClass: string) => {
-    const existingStudent = students.find(s => s.rollNumber === rollNumber);
+  const saveStudent = (name: string, roll_number: string, studentClass: string) => {
+    const existingStudent = students.find(s => s.roll_number === roll_number);
     
     if (existingStudent) {
       setCurrentStudent(existingStudent);
@@ -313,7 +313,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newStudent: Student = {
         id: Date.now().toString(),
         name,
-        rollNumber,
+        roll_number,
         class: studentClass,
         score: 0,
         totalQuestions: 0,
@@ -327,8 +327,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
-  const studentLogin = (rollNumber: string) => {
-    const student = students.find(s => s.rollNumber === rollNumber);
+  const studentLogin = (roll_number: string) => {
+    const student = students.find(s => s.roll_number === roll_number);
     
     if (student) {
       setCurrentStudent(student);

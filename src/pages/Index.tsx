@@ -17,8 +17,9 @@ const operationIcons = [
 ];
 
 const Index = () => {
-  const { students, isTeacher, currentStudent } = useQuiz();
-
+  const { students, isTeacher } = useQuiz();
+  const storedStudent = localStorage.getItem("student");
+  const currentStudent = storedStudent ? JSON.parse(storedStudent) : null;
   // Animation variants
   const container = {
     hidden: { opacity: 0 },

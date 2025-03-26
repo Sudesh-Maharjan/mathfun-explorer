@@ -19,7 +19,7 @@ const StudentRegistration: React.FC = () => {
   // Login state
   const [loginRollNumber, setLoginRollNumber] = useState('');
   
-  const { saveStudent, studentLogin } = useQuiz();
+  const { saveStudent } = useQuiz();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,10 +64,10 @@ const handleRegister = async (e: React.FormEvent) => {
         rollNumber,
         className: studentClass,
     });
+console.log("Register response:", response);
+    const data = await response;
 
-    const data = await response.json();
-
-    if (response.ok) {
+    if (data.status === 201) {
       toast({
         title: "Registration Successful",
         description: "You're ready to play!",
@@ -133,21 +133,18 @@ const handleLogin = async (e: React.FormEvent) => {
 
   try {
     const response = await post('/login/student', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
         rollNumber: loginRollNumber,
-      }),
     });
 
-    const data = await response.json();
+    const data = await response;
 
-    if (response.ok) {
+    if (response) {
+      saveStudent(data.student.name, data.student.roll_number, data.student.className);
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem("student", JSON.stringify(data.student));
       toast({
         title: "Login Successful",
-        description: "Welcome back! Ready to play?",
+        description: `Welcome back! ${data.student.name}, Ready to play?`,
       });
 
       navigate('/quiz');

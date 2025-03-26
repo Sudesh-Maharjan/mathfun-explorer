@@ -14,6 +14,7 @@ interface NavItemProps {
 }
 
 const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, current }) => {
+  
   return (
     <Link to={to}>
       <Button
@@ -41,8 +42,9 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, current }) => 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isTeacher, teacherLogout, currentStudent, studentLogout } = useQuiz();
-  
+  const { isTeacher, teacherLogout, studentLogout } = useQuiz();
+  const storedStudent = localStorage.getItem("student");
+  const currentStudent = storedStudent ? JSON.parse(storedStudent) : null;
   const path = location.pathname;
 
   const handleTeacherLogout = () => {
@@ -51,6 +53,7 @@ const Header: React.FC = () => {
   };
 
   const handleStudentLogout = () => {
+    localStorage.removeItem("student");
     studentLogout();
     navigate('/');
   };
@@ -91,7 +94,7 @@ const Header: React.FC = () => {
           {currentStudent && (
             <div className="text-sm font-medium hidden sm:block">
               <span className="text-muted-foreground">Student:</span>{" "}
-              <span className="text-foreground">{currentStudent.name} ({currentStudent.rollNumber}, {currentStudent.class})</span>
+              <span className="text-foreground">{currentStudent.name} ({currentStudent.roll_number}, {currentStudent.class})</span>
             </div>
           )}
           
