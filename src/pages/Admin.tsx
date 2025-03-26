@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,8 +11,9 @@ import { useEffect } from 'react';
 import StudentDetailedPerformance from '../components/StudentDetailedPerformance';
 
 const Admin = () => {
-  const { students, isTeacher } = useQuiz();
+  const { students } = useQuiz();
   const navigate = useNavigate();
+  const isTeacher = localStorage.getItem('teacher') ? true : false;
 
   // Redirect if not teacher
   useEffect(() => {
@@ -118,7 +118,7 @@ const Admin = () => {
                             return (
                               <tr key={student.id} className="border-b hover:bg-muted/20">
                                 <td className="py-2 px-3 font-medium">{student.name}</td>
-                                <td className="py-2 px-3">{student.rollNumber}</td>
+                                <td className="py-2 px-3">{student.roll_number}</td>
                                 <td className="py-2 px-3">{student.class}</td>
                                 <td className="py-2 px-3 text-center">{student.score}</td>
                                 <td className="py-2 px-3 text-center">{student.totalQuestions}</td>

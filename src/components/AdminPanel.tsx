@@ -14,6 +14,7 @@ import {
 import { Trash2, Plus, Edit, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { post } from '@/api';
 
 const AdminPanel: React.FC = () => {
   const { customQuestions, addCustomQuestion, removeCustomQuestion } = useQuiz();
@@ -25,6 +26,7 @@ const AdminPanel: React.FC = () => {
   const [operation, setOperation] = useState<Operation>('addition');
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...options];
@@ -32,7 +34,8 @@ const AdminPanel: React.FC = () => {
     setOptions(newOptions);
   };
 
-  const handleAddQuestion = () => {
+  const handleAddQuestion = async() => {
+    console.log("Add Question executed!")
     // Validation
     if (!newQuestion.trim()) {
       toast({
@@ -65,21 +68,21 @@ const AdminPanel: React.FC = () => {
     }
 
     // Convert options to numbers
-    const numericOptions = allOptions.map(Number);
+    // const numericOptions = allOptions.map(Number);
 
     // Create the new question
-    const questionObj: Omit<Question, 'id'> = {
-      question: newQuestion,
-      answer: Number(newAnswer),
-      options: numericOptions,
-      operation,
-      difficulty,
-    };
+    // const questionObj: Omit<Question, 'id'> = {
+    //   question: newQuestion,
+    //   answer: Number(newAnswer),
+    //   options: numericOptions,
+    //   operation,
+    //   difficulty,
+    // };
 
     if (editingId) {
       // Update existing question
       removeCustomQuestion(editingId);
-      addCustomQuestion(questionObj);
+      // addCustomQuestion(questionObj);
       setEditingId(null);
       toast({
         title: "Success",
@@ -87,11 +90,36 @@ const AdminPanel: React.FC = () => {
       });
     } else {
       // Add new question
-      addCustomQuestion(questionObj);
-      toast({
-        title: "Success",
-        description: "New question added successfully",
-      });
+      // addCustomQuestion(questionObj);
+
+      // toast({
+      //   title: "Success",
+      //   description: "New question added successfully",
+      // });
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("teacher_token");
+        console.log("Teacher Token", token)
+        const response = await post('/teacher/custom-quetsions', {
+          operation,
+          difficulty,
+          question: newQuestion,
+          correct_answer: newAnswer,
+          wrong_option1: options[0],
+          wrong_option2: options[1],
+          wrong_option3: options[2]
+        }, token);
+        console.log('Add question response',response)
+        if (!response) throw new Error('Failed to add question');
+        toast({ title: "Success", description: "Question added successfully" });
+        setNewQuestion('');
+        setNewAnswer('');
+        setOptions(['', '', '']);
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to add question", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
     }
 
     // Reset form
@@ -217,7 +245,7 @@ const AdminPanel: React.FC = () => {
                   Cancel
                 </Button>
               )}
-              <Button onClick={handleAddQuestion}>
+              <Button onClick={handleAddQuestion} disabled={loading}>
                 {editingId ? (
                   <>
                     <Save className="mr-2 h-4 w-4" />
@@ -225,8 +253,7 @@ const AdminPanel: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Question
+                    {loading ? 'Adding...' : <><Plus className="mr-2 h-4 w-4" /> Add Question</>}
                   </>
                 )}
               </Button>
