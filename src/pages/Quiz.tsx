@@ -213,10 +213,12 @@ const Quiz = () => {
   const hasQuestionsForCurrent = customQuestions.filter(
     q => q.operation === operation && q.difficulty === difficulty
   ).length > 0;
-
+const isTeacher = localStorage.getItem('teacher') ? true : false;
+const isStudent = localStorage.getItem('student') ? true : false;
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {(isTeacher || isStudent) ? (
       
       <main className="content-container">
         {!quizStarted ? (
@@ -518,6 +520,20 @@ const Quiz = () => {
           </div>
         )}
       </main>
+            ) : (
+              <div className="max-w-3xl mx-auto">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle>Login as Student or Teacher to play the Quiz</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>You do not have permission to view this page.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          }
+
     </div>
   );
 };

@@ -58,13 +58,11 @@ const handleRegister = async (e: React.FormEvent) => {
   }
 
   try {
-    console.log("Sending data:", { name, rollNumber, className: studentClass });
     const response = await post('/register/student', {
         name,
         rollNumber,
         className: studentClass,
     });
-console.log("Register response:", response);
     const data = await response;
 
     if (data.status === 201) {

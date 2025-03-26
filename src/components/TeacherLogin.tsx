@@ -8,6 +8,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserPlus } from 'lucide-react';
 import AuthLayout from './AuthLayout';
+import { post } from '@/api';
 
 const TeacherLogin: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -15,27 +16,70 @@ const TeacherLogin: React.FC = () => {
   const { teacherLogin } = useQuiz();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+    
+  //   const success = teacherLogin(username, password);
+    
+  //   if (success) {
+  //     toast({
+  //       title: "Login Successful",
+  //       description: "Welcome back, Teacher!",
+  //     });
+  //     navigate('/admin');
+  //   } else {
+  //     toast({
+  //       title: "Login Failed",
+  //       description: "Invalid username or password",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const success = teacherLogin(username, password);
-    
-    if (success) {
-      toast({
-        title: "Login Successful",
-        description: "Welcome back, Teacher!",
-      });
-      navigate('/admin');
-    } else {
+    setLoading(true);
+
+    try {
+      const response = await post('/login/teacher', { username, password });
+      const data = await response;
+console.log("Teacher data", data);
+      if (data) {
+        teacherLogin(username, password);
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, Tutor, ${data.user.full_name}!`,
+        });
+        if (data.accessToken) {
+          localStorage.setItem('teacher_token', data.accessToken);
+          localStorage.setItem('teacher', data.user);
+        }
+        navigate('/admin');
+      }
+       else {
+        throw new Error(data.message || "Invalid username or password");
+      }
+    } catch (error) {
+      let errorMessage = "An error occurred during login.";
+
+      if (error.response) {
+        errorMessage = error.response.data?.message || "Something went wrong on the server.";
+      } else if (error.request) {
+        errorMessage = "No response from the server. Please check your network.";
+      } else {
+        errorMessage = error.message || "Unexpected error occurred.";
+      }
+
       toast({
         title: "Login Failed",
-        description: "Invalid username or password",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
-
   return (
     <AuthLayout title="Teacher Login">
       <Card className="glass-card max-w-md mx-auto">

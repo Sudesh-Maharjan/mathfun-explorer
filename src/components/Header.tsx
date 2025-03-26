@@ -42,19 +42,21 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, current }) => 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isTeacher, teacherLogout, studentLogout } = useQuiz();
+  const { teacherLogout, studentLogout } = useQuiz();
+  const isTeacher = localStorage.getItem('teacher') ? true : false;
   const storedStudent = localStorage.getItem("student");
   const currentStudent = storedStudent ? JSON.parse(storedStudent) : null;
   const path = location.pathname;
 
   const handleTeacherLogout = () => {
     teacherLogout();
+    localStorage.removeItem("teacher");
     navigate('/');
   };
 
   const handleStudentLogout = () => {
-    localStorage.removeItem("student");
     studentLogout();
+    localStorage.removeItem("student");
     navigate('/');
   };
 
@@ -148,7 +150,7 @@ const Header: React.FC = () => {
             <Medal size={20} />
             <span>Scores</span>
           </Link>
-          {isTeacher && (
+          {isTeacher  && (
             <Link to="/admin" className={`flex flex-col items-center text-xs ${path === "/admin" ? "text-primary" : "text-muted-foreground"}`}>
               <Settings size={20} />
               <span>Teacher</span>
