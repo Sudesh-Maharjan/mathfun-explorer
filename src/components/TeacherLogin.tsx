@@ -53,7 +53,7 @@ console.log("Teacher data", data);
         });
         if (data.accessToken) {
           localStorage.setItem('teacher_token', data.accessToken);
-          localStorage.setItem('teacher', data.user);
+          localStorage.setItem('teacher', JSON.stringify(data.user));
         }
         navigate('/admin');
       }

@@ -22,10 +22,10 @@ export interface Student {
   id: string;
   name: string;
   roll_number: string;
-  class: string;
   score: number;
-  totalQuestions: number;
-  correctAnswers: number;
+  total_questions_attempted: number;
+  correct_questions: number;
+  accuracy: number;
 }
 
 export interface Teacher {
@@ -261,8 +261,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedStudent = {
           ...currentStudent,
           score: currentStudent.score + 1,
-          correctAnswers: currentStudent.correctAnswers + 1,
-          totalQuestions: currentStudent.totalQuestions + 1
+          correctAnswers: currentStudent.correct_questions + 1,
+          totalQuestions: currentStudent.total_questions_attempted + 1
         };
         
         setCurrentStudent(updatedStudent);
@@ -274,7 +274,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else if (currentStudent) {
       const updatedStudent = {
         ...currentStudent,
-        totalQuestions: currentStudent.totalQuestions + 1
+        totalQuestions: currentStudent.total_questions_attempted + 1
       };
       
       setCurrentStudent(updatedStudent);

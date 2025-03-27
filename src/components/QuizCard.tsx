@@ -48,24 +48,17 @@ const QuizCard: React.FC<QuizCardProps> = ({ question, onAnswerSelected, onNextQ
         variant: "destructive",
       });
     }
-    
-    // Auto-advance after a delay
-      onNextQuestion();
-      // Reset state for next question
-      setSelectedAnswer(null);
-      setIsCorrect(null);
-      setShowFeedback(false);
   };
 
-  const getOperationSymbol = () => {
-    switch (question?.operation) {
-      case 'addition': return '+';
-      case 'subtraction': return '-';
-      case 'multiplication': return '×';
-      case 'division': return '÷';
-      default: return '';
-    }
-  };
+  // const getOperationSymbol = () => {
+  //   switch (question?.operation) {
+  //     case 'addition': return '+';
+  //     case 'subtraction': return '-';
+  //     case 'multiplication': return '×';
+  //     case 'division': return '÷';
+  //     default: return '';
+  //   }
+  // };
 
   const getOperationColor = () => {
     switch (question?.operation) {
@@ -115,35 +108,31 @@ const shuffledOptions = options.sort(() => Math.random() - 0.5);
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Button
-                  variant={selectedAnswer === option 
-                    ? isCorrect 
-                      ? "default" 
-                      : "destructive" 
-                    : "outline"}
-                  className={`quiz-option w-full h-16 text-2xl font-semibold ${
-                    selectedAnswer === option ? (isCorrect ? 'bg-green-500' : 'bg-red-500') : ''
-                  } ${showFeedback && option === question?.correct_answer && selectedAnswer !== option ? 'ring-2 ring-green-500' : ''}`}
-                  onClick={() => handleOptionClick(option)}
-                  disabled={selectedAnswer !== null}
-                >
-                  {option}
-                  {showFeedback && selectedAnswer === option && (
-                    <AnimatePresence>
-                      <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="absolute right-2"
-                      >
-                        {isCorrect ? (
-                          <CheckCircle2 className="h-6 w-6 text-green-100" />
-                        ) : (
-                          <XCircle className="h-6 w-6 text-red-100" />
-                        )}
-                      </motion.div>
-                    </AnimatePresence>
-                  )}
-                </Button>
+              <Button
+  variant="outline"
+  className={`quiz-option w-full h-16 text-2xl font-semibold 
+    ${selectedAnswer === option ? (isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white') : ''}
+    ${showFeedback && option === question?.correct_answer && selectedAnswer !== option ? 'ring-2 ring-green-500' : ''}`}
+  onClick={() => handleOptionClick(option)}
+  disabled={selectedAnswer !== null}
+>
+  {option}
+  {showFeedback && selectedAnswer === option && (
+    <AnimatePresence>
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="absolute right-2"
+      >
+        {isCorrect ? (
+          <CheckCircle2 className="h-6 w-6 text-green-100" />
+        ) : (
+          <XCircle className="h-6 w-6 text-red-100" />
+        )}
+      </motion.div>
+    </AnimatePresence>
+  )}
+</Button>
               </motion.div>
             ))}
           </div>

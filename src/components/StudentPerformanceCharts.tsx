@@ -54,9 +54,7 @@ const StudentPerformanceCharts: React.FC<StudentPerformanceChartsProps> = ({ stu
   ];
 
   students.forEach(student => {
-    const accuracy = student.totalQuestions > 0 
-      ? Math.round((student.correctAnswers / student.totalQuestions) * 100) 
-      : 0;
+    const accuracy = student.accuracy;
       
     if (accuracy >= 90) {
       accuracyGroups[0].value++;

@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Student } from '../context/QuizContext';
 import { Trophy, Award, Medal } from 'lucide-react';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 interface LeaderboardCardProps {
   students: Student[];
@@ -11,23 +12,38 @@ interface LeaderboardCardProps {
   showTitle?: boolean;
 }
 
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ 
-  students, 
   limit = 5,
   showTitle = true
 }) => {
+    const [students, setStudents] = useState([]);
+  
   // Sort students by score and take the top ones
   const topStudents = [...students]
     .sort((a, b) => {
       // Primary sort by score
       if (b.score !== a.score) return b.score - a.score;
       // Secondary sort by accuracy (correct answers / total)
-      const aAccuracy = a.totalQuestions > 0 ? a.correctAnswers / a.totalQuestions : 0;
-      const bAccuracy = b.totalQuestions > 0 ? b.correctAnswers / b.totalQuestions : 0;
+      const aAccuracy = a.total_questions_attempted > 0 ? a.correct_questions / a.total_questions_attempted : 0;
+      const bAccuracy = b.total_questions_attempted > 0 ? b.correct_questions / b.total_questions_attempted : 0;
       return bAccuracy - aAccuracy;
     })
     .slice(0, limit);
-
+    useEffect(() => {
+      const fetchLeaderboard = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/leaderboard`);
+          console.log("Leaderboard response data", response);
+          setStudents(response.data?.data);
+        } catch (error) {
+          console.error('Error fetching leaderboard:', error);
+        }
+      };
+  
+      fetchLeaderboard();
+    }, []);
   // No students yet
   if (topStudents.length === 0) {
     return (
@@ -83,8 +99,8 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
         >
           {topStudents.map((student, index) => {
             // Calculate accuracy percentage
-            const accuracy = student.totalQuestions > 0 
-              ? Math.round((student.correctAnswers / student.totalQuestions) * 100) 
+            const accuracy = student.total_questions_attempted > 0 
+              ? Math.round((student.correct_questions / student.total_questions_attempted) * 100) 
               : 0;
               
             return (
@@ -106,7 +122,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-sm text-muted-foreground">
-                    {accuracy}% accuracy
+                    {accuracy}% Accuracy
                   </div>
                   <div className="font-bold text-lg">
                     {student.score}

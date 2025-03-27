@@ -14,7 +14,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const Leaderboard = () => {
+const Leaderboard = ({score}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [students, setStudents] = useState([]);
@@ -130,8 +130,8 @@ const Leaderboard = () => {
                       </div>
                       
                       {sortedStudents.map((student, index) => {
-                        const accuracy = student.totalQuestions > 0 
-                          ? Math.round((student.correctAnswers / student.totalQuestions) * 100) 
+                        const accuracy = student.total_questions_attempted > 0 
+                          ? Math.round((student.correct_questions / student.total_questions_attempted) * 100) 
                           : 0;
                           
                         return (
@@ -156,7 +156,7 @@ const Leaderboard = () => {
                             </div>
                             
                             <div className="hidden sm:block sm:col-span-2 text-center">
-                              {student.totalQuestions}
+                              {student.total_questions_attempted}
                             </div>
                             
                             <div className="hidden sm:block sm:col-span-2 text-center">
@@ -164,7 +164,7 @@ const Leaderboard = () => {
                             </div>
                             
                             <div className="col-span-1 sm:col-span-2 text-right font-bold">
-                              {student.score}
+                              {score}
                             </div>
                           </motion.div>
                         );

@@ -44,7 +44,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import axios from "axios";
-import { set } from "date-fns";
+// import { set } from "date-fns";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -99,7 +99,6 @@ const getOperationIcon = (operation: Operation) => {
 
 const Quiz = () => {
   const {
-    score,
     // generateNewQuestion,
     checkAnswer,
     resetQuiz,
@@ -117,6 +116,7 @@ const Quiz = () => {
   const [quizResults, setQuizResults] = useState<
     Array<{ question: string; correct: boolean }>
   >([]);
+  
   const [hasEnoughQuestions, setHasEnoughQuestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
@@ -126,6 +126,7 @@ const Quiz = () => {
   const [availableOperations, setAvailableOperations] = useState<Operation[]>(
     []
   );
+  const [quizAnswers, setQuizAnswers] = useState<{ questionId: number; studentAnswer: string; isCorrect: boolean }[]>([]);
   const [questionResponse, setQuestionResponse] = useState({
     data: [],
     loading: true,
@@ -134,6 +135,7 @@ const Quiz = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("easy");
   const [selectedOperation, setSelectedOperation] =
     useState<string>("addition");
+    const [score, setScore] = useState<number>(0);
   useEffect(() => {
     // Check search params for initial operation
     const opParam = searchParams.get("op");
@@ -282,13 +284,32 @@ const Quiz = () => {
   const handleAnswerSelected = (selectedAnswer: number) => {
     // if (!currentQuestion) return;
 
-    const isCorrect = checkAnswer(selectedAnswer);
-    setQuestionsAnswered((prev) => prev + 1);
+    const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+    setQuestionsAnswered((prev) => {
+      const updatedCount = prev + 1;
+  
+      // Check if quiz is complete (10 questions)
+      if (updatedCount >= 10) {
+        setCompletedQuiz(true);
+        submitQuizAnswers(
+          (newScore) => {
+            setScore(newScore);
+          }
+        ); // Submit once the quiz is completed
+      }
+  
+      return updatedCount;
+    });
 
-    if (isCorrect) {
-      setCorrectAnswers((prev) => prev + 1);
-    }
-
+    setCorrectAnswers((prev) => (isCorrect ? prev + 1 : prev));
+    setQuizAnswers((prev) => [
+      ...prev,
+      {
+        questionId: currentQuestion.id,
+        studentAnswer: selectedAnswer.toString(),
+        isCorrect,
+      },
+    ]);
     // Record result for the progress chart
     setQuizResults((prev) => [
       ...prev,
@@ -301,9 +322,73 @@ const Quiz = () => {
     // Check if quiz is complete (10 questions)
     if (questionsAnswered + 1 >= 10) {
       setCompletedQuiz(true);
+      submitQuizAnswers( 
+        (newScore) => {
+          setScore(newScore);
+        }
+      );
     }
   };
+  const submitQuizAnswers = async (onScoreUpdate: (newScore: number) => void) => {
+    try {
+      const payload = {
+        sessionId: sessionId,
+        answers: quizAnswers,
+      };
+      console.log("🚀 ~ submitQuizAnswers ~ payload:", payload)
+      console.log("🚀 ~ submitQuizAnswers ~ payload.sessionId:", payload.sessionId)
+      const response = await axios.post(`${API_URL}/student/quizzes/answer`, payload, {
+        headers: {
+          authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
 
+      });
+      if(response.status === 200) {
+      toast({
+        title: "Quiz Submitted!",
+        description: "Your answers have been recorded successfully.",
+        variant: "default",
+      });
+    }else{
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your answers. Please try again.",
+        variant: "destructive",
+      });
+    }
+    } catch (error) {
+      console.error("Error submitting answers:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your answers. Please try again.",
+        variant: "destructive",
+      });
+    }
+    try{
+      const response = await axios.post(`${API_URL}/student/quizzes/end`, sessionId, {
+        headers: {
+          authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if(response.status === 200) {
+        toast({
+          title: "Quiz Ended!",
+          description: "Your quiz session has been ended successfully.",
+          variant: "default",
+        });
+      }
+      const newScore = response.data?.score;
+      setScore(newScore); // Update parent state
+      onScoreUpdate(newScore);
+    } catch (error) {
+      console.error("Error ending quiz:", error);
+      toast({
+        title: "Error",
+        description: "There was an error ending the quiz.",
+        variant: "destructive",
+      })
+    }
+  };
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questionResponse.data.length - 1) {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
