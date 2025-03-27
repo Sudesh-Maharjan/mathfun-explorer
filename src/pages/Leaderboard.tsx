@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,29 @@ import { useQuiz, Student } from '../context/QuizContext';
 import Header from '../components/Header';
 import { Trophy, Medal, Award, Search, AlertTriangle, X, BarChart2, List } from 'lucide-react';
 import StudentPerformanceCharts from '../components/StudentPerformanceCharts';
+import axios from 'axios';
+
+
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Leaderboard = () => {
-  const { students } = useQuiz();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
-  
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/leaderboard`);
+        console.log("Leaderboard response data", response);
+        setStudents(response.data?.data);
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredStudents(students);
@@ -28,15 +45,7 @@ const Leaderboard = () => {
   }, [searchQuery, students]);
   
   // Sort students by score and accuracy
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
-    // Primary sort by score
-    if (b.score !== a.score) return b.score - a.score;
-    
-    // Secondary sort by accuracy
-    const aAccuracy = a.totalQuestions > 0 ? a.correctAnswers / a.totalQuestions : 0;
-    const bAccuracy = b.totalQuestions > 0 ? b.correctAnswers / b.totalQuestions : 0;
-    return bAccuracy - aAccuracy;
-  });
+  const sortedStudents = [...filteredStudents].sort((a, b) => b.score - a.score);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {

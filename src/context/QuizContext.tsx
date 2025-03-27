@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { generateQuestion } from '../utils/questionGenerator';
 import { toast } from "@/hooks/use-toast";
+import { error } from 'console';
+import axios from 'axios';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division';
@@ -8,8 +10,10 @@ export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'divisio
 export interface Question {
   id: string;
   question: string;
-  options: number[];
-  answer: number;
+  correct_answer: number;
+  wrong_option1: number;
+  wrong_option2: number;
+  wrong_option3: number; 
   operation: Operation;
   difficulty: Difficulty;
 }
@@ -89,6 +93,7 @@ const defaultContext: QuizContextType = {
 };
 
 const QuizContext = createContext<QuizContextType>(defaultContext);
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const useQuiz = () => useContext(QuizContext);
 
@@ -105,7 +110,11 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [availableOperations, setAvailableOperations] = useState<Operation[]>(['addition']);
   const [availableDifficulties, setAvailableDifficulties] = useState<Difficulty[]>(['easy']);
-
+  const [questionResponse, setQuestionResponse] = useState({
+    data: [],
+    loading: true,
+    error: null
+  });
   useEffect(() => {
     const savedTeachers = localStorage.getItem('mathQuizTeachers');
     if (savedTeachers) {
@@ -121,6 +130,28 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTeachers([defaultTeacher]);
       localStorage.setItem('mathQuizTeachers', JSON.stringify([defaultTeacher]));
     }
+  }, []);
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/student/quizzes/questions`, {
+          headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setQuestionResponse({
+          data: response.data.data, // Make sure to use response.data.data
+          loading: false,
+          error: null,
+        });
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        setQuestionResponse({
+          data: [],
+          loading: false,
+          error: "Failed to fetch questions",
+        });
+      }
+    };
+    fetchQuestions();
   }, []);
 
   useEffect(() => {
@@ -177,7 +208,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const generateNewQuestion = () => {
-    const filteredQuestions = customQuestions.filter(
+    const filteredQuestions = questionResponse.data.filter(
       q => q.operation === operation && q.difficulty === difficulty
     );
     
@@ -221,7 +252,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const checkAnswer = (selectedAnswer: number) => {
     if (!currentQuestion) return false;
     
-    const isCorrect = selectedAnswer === currentQuestion.answer;
+    const isCorrect = selectedAnswer === currentQuestion.correct_answer;
     
     if (isCorrect) {
       setScore(prev => prev + 1);
