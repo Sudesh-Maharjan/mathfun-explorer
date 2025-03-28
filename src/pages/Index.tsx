@@ -8,6 +8,7 @@ import { Calculator, Award, Plus, Minus, X, Divide, LogIn, User, Play } from 'lu
 import { useQuiz } from '../context/QuizContext';
 import Header from '../components/Header';
 import LeaderboardCard from '../components/LeaderboardCard';
+import GameRules from '@/components/GameRules';
 
 const operationIcons = [
   { icon: Plus, color: 'bg-blue-500', name: 'Addition' },
@@ -177,9 +178,12 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
+            <GameRules/>
+
           </motion.div>
         </div>
       </main>
+      
     </div>
   );
 };
