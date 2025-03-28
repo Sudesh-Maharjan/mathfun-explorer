@@ -26,10 +26,7 @@ import {
   Divide,
   RefreshCw,
   Trophy,
-  BarChart3,
   AlertCircle,
-  ChevronRight,
-  ChevronLeft,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,7 +41,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import axios from "axios";
-// import { set } from "date-fns";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -99,11 +95,8 @@ const getOperationIcon = (operation: Operation) => {
 
 const Quiz = () => {
   const {
-    // generateNewQuestion,
-    checkAnswer,
     resetQuiz,
     currentStudent,
-    customQuestions,
   } = useQuiz();
 
   const { toast } = useToast();
@@ -316,7 +309,7 @@ const Quiz = () => {
     ]);
 
     // Check if quiz is complete (10 questions)
-    if (questionsAnswered + 1 === 10) {
+    if (questionsAnswered  === 10) {
       setCompletedQuiz(true);
       submitQuizAnswers( 
         (newScore) => {
@@ -410,13 +403,6 @@ const Quiz = () => {
     score: result.correct ? 1 : 0,
     cumulative: quizResults.slice(0, index + 1).filter((r) => r.correct).length,
   }));
-
-  // Check if we have any questions available
-  // const hasQuestions = questionResponse.data?.length > 0;
-  // const hasQuestionsForCurrent = questionResponse.data.some(
-  //   (q) => q.operation === operation && q.difficulty === difficulty
-  // );
-  const isTeacher = localStorage.getItem("teacher") ? true : false;
   const isStudent = localStorage.getItem("student") ? true : false;
   console.log("Questions Answered:", questionsAnswered);
 console.log("Current Question Index:", currentQuestionIndex);
@@ -426,7 +412,7 @@ console.log("Current Question:", currentQuestion);
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {isTeacher || isStudent ? (
+      { isStudent ? (
         <main className="content-container">
           {!quizStarted ? (
             <Card className="max-w-2xl mx-auto glass-card">
@@ -768,11 +754,11 @@ console.log("Current Question:", currentQuestion);
           )}
         </main>
       ) : (
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto mt-14">
           <Card className="glass-card">
             <CardHeader>
               <CardTitle>
-                Login as Student or Teacher to play the Quiz
+                Login as Student to play the Quiz
               </CardTitle>
             </CardHeader>
             <CardContent>

@@ -45,7 +45,15 @@ const Leaderboard = ({score}) => {
   }, [searchQuery, students]);
   
   // Sort students by score and accuracy
-  const sortedStudents = [...filteredStudents].sort((a, b) => b.score - a.score);
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
+    const accuracyA = a.total_questions_attempted > 0 ? (a.correct_questions / a.total_questions_attempted) * 100 : 0;
+    const accuracyB = b.total_questions_attempted > 0 ? (b.correct_questions / b.total_questions_attempted) * 100 : 0;
+  
+    if (accuracyB !== accuracyA) {
+      return accuracyB - accuracyA; // Sort by accuracy first
+    }
+    return b.score - a.score; // If accuracy is same, sort by score
+  });
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
