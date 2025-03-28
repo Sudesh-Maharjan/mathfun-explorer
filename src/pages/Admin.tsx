@@ -7,13 +7,56 @@ import Header from '../components/Header';
 import AdminPanel from '../components/AdminPanel';
 import { Settings, Users, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import StudentDetailedPerformance from '../components/StudentDetailedPerformance';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Admin = () => {
   const { students } = useQuiz();
   const navigate = useNavigate();
   const isTeacher = localStorage.getItem('teacher') ? true : false;
+const [studentList, setStudentList] = useState([]);
+
+const handleDeleteClick = async (rollNumber: number) => {
+  console.log("🚀 ~ handleDeleteClick ~ rollNumber:", rollNumber)
+  
+  try {
+    const response = await axios.delete(`${API_URL}/teacher/student/${rollNumber}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+      },
+    });
+
+    const data = await response;
+
+    if (response) {
+      alert("Student deleted successfully!");
+      // Optionally, refresh data or update the UI accordingly
+    } else {
+      alert(`Error: ${data}`);
+    }
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    alert("Failed to delete student.");
+  }
+};
+
+
+useEffect(() => {
+  (async () => {
+    const response = await axios.get(`${API_URL}/teacher/students-list`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+      },
+    });
+    const studentList = response.data?.data;
+    console.log("Student list", studentList);
+    setStudentList(studentList);
+  })();
+}, []);
 
   // Redirect if not teacher
   useEffect(() => {
@@ -61,7 +104,7 @@ const Admin = () => {
           <h1 className="text-3xl font-bold mb-6">Teacher Panel</h1>
           
           <Tabs defaultValue="questions">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="questions" className="gap-2">
                 <Settings className="h-4 w-4" />
                 Manage Questions
@@ -73,6 +116,10 @@ const Admin = () => {
               <TabsTrigger value="performance" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Detailed Performance
+              </TabsTrigger>
+              <TabsTrigger value="list" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Student List
               </TabsTrigger>
             </TabsList>
             
@@ -111,18 +158,18 @@ const Admin = () => {
                           </tr>
                         ) : (
                           students.map(student => {
-                            const accuracy = student.totalQuestions > 0 
-                              ? Math.round((student.correctAnswers / student.totalQuestions) * 100) 
+                            const accuracy = student.total_questions_attempted > 0 
+                              ? Math.round((student.correct_questions / student.total_questions_attempted) * 100) 
                               : 0;
                               
                             return (
                               <tr key={student.id} className="border-b hover:bg-muted/20">
                                 <td className="py-2 px-3 font-medium">{student.name}</td>
                                 <td className="py-2 px-3">{student.roll_number}</td>
-                                <td className="py-2 px-3">{student.class}</td>
+                                <td className="py-2 px-3">{student.score}</td>
                                 <td className="py-2 px-3 text-center">{student.score}</td>
-                                <td className="py-2 px-3 text-center">{student.totalQuestions}</td>
-                                <td className="py-2 px-3 text-center">{student.correctAnswers}</td>
+                                <td className="py-2 px-3 text-center">{student.total_questions_attempted}</td>
+                                <td className="py-2 px-3 text-center">{student.correct_questions}</td>
                                 <td className="py-2 px-3 text-center">{accuracy}%</td>
                               </tr>
                             );
@@ -137,6 +184,48 @@ const Admin = () => {
             
             <TabsContent value="performance">
               <StudentDetailedPerformance students={students} />
+            </TabsContent>
+            <TabsContent value="list">
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle>Student List</CardTitle>
+                  <CardDescription>
+                    View the list of all students.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-3 font-medium">Name</th>
+                          <th className="text-left py-2 px-3 font-medium">Roll Number</th>
+                          <th className="text-left py-2 px-3 font-medium">Class</th>
+                          <th className="text-left py-2 px-3 font-medium">Delete</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {studentList.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} className="text-center py-6 text-muted-foreground">
+                              No student data available
+                            </td>
+                          </tr>
+                        ) : (
+                          studentList.map(student => (
+                            <tr key={student.id} className="border-b hover:bg-muted/20">
+                              <td className="py-2 px-3 font-medium">{student.name}</td>
+                              <td className="py-2 px-3">{student.roll_number}</td>
+                              <td className="py-2 px-3">{student.class}</td>
+                              <button onClick={() => handleDeleteClick(student.roll_number)} className="py-2 px-3 cursor-pointer text-red-700 bg-red-200 hover:bg-red-300 border border-red-400 rounded-md">Delete</button>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </motion.div>

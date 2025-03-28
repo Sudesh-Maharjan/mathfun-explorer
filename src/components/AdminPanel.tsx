@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuiz, Operation, Difficulty, Question } from '../context/QuizContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,12 @@ import { Trash2, Plus, Edit, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { post } from '@/api';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AdminPanel: React.FC = () => {
-  const { customQuestions, addCustomQuestion, removeCustomQuestion } = useQuiz();
+  // const { removeCustomQuestion } = useQuiz();
   const { toast } = useToast();
   
   const [newQuestion, setNewQuestion] = useState('');
@@ -27,12 +30,32 @@ const AdminPanel: React.FC = () => {
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
+const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
   };
+
+useEffect(() => {
+  const fetchQuestions = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/teacher/questions-list`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+        },
+      });
+      setCustomQuestions(response.data?.data);
+      console.log("Custom Questions", response.data?.data)
+      // Handle customQuestions as needed
+    } catch (error) {
+      console.error("Failed to fetch questions:", error);
+    }
+  };
+
+  fetchQuestions();
+}, []);
 
   const handleAddQuestion = async() => {
     console.log("Add Question executed!")
@@ -81,8 +104,22 @@ const AdminPanel: React.FC = () => {
 
     if (editingId) {
       // Update existing question
-      removeCustomQuestion(editingId);
-      // addCustomQuestion(questionObj);
+const response = await axios.put(`${API_URL}/teacher/question/${editingId}`, {
+        operation,
+        difficulty,
+        question: newQuestion,
+        correct_answer: newAnswer,
+        wrong_option1: options[0],
+        wrong_option2: options[1],
+        wrong_option3: options[2]
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+        },
+      });
+      if (!response) throw new Error('Failed to update question');
+      setCustomQuestions(response.data.data);
       setEditingId(null);
       toast({
         title: "Success",
@@ -90,16 +127,9 @@ const AdminPanel: React.FC = () => {
       });
     } else {
       // Add new question
-      // addCustomQuestion(questionObj);
-
-      // toast({
-      //   title: "Success",
-      //   description: "New question added successfully",
-      // });
       setLoading(true);
       try {
         const token = localStorage.getItem("teacher_token");
-        console.log("Teacher Token", token)
         const response = await post('/teacher/custom-quetsions', {
           operation,
           difficulty,
@@ -131,18 +161,20 @@ const AdminPanel: React.FC = () => {
   const handleEditQuestion = (question: Question) => {
     setEditingId(question.id);
     setNewQuestion(question.question);
-    setNewAnswer(question.answer.toString());
+    setNewAnswer(question.correct_answer.toString());
     
     // Set options excluding the correct answer
-    const otherOptions = question.options
-      .filter(opt => opt !== question.answer)
-      .map(opt => opt.toString());
+    const otherOptions = [
+      question.wrong_option1,
+      question.wrong_option2,
+      question.wrong_option3,
+    ].filter(opt => opt !== undefined && opt !== question.correct_answer);
     
     // Fill in the available options or pad with empty strings
     setOptions([
-      otherOptions[0] || '',
-      otherOptions[1] || '',
-      otherOptions[2] || '',
+      String(otherOptions[0] || ''),
+      String(otherOptions[1] || ''),
+      String(otherOptions[2] || ''),
     ]);
     
     setOperation(question.operation);
@@ -285,7 +317,7 @@ const AdminPanel: React.FC = () => {
                     <div className="flex-1">
                       <div className="font-medium">{question.question}</div>
                       <div className="text-sm text-muted-foreground">
-                        Answer: {question.answer} | 
+                        Answer: {question.correct_answer} | 
                         {question.operation.charAt(0).toUpperCase() + question.operation.slice(1)} |
                         {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
                       </div>
