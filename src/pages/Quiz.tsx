@@ -109,7 +109,7 @@ const Quiz = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [quizStarted, setQuizStarted] = useState(false);
-  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);  
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [completedQuiz, setCompletedQuiz] = useState(false);
@@ -203,9 +203,9 @@ const Quiz = () => {
       setLoading(true);
 
       // Step 1: Start the quiz and get sessionId
-      const startResponse = await axios.post(
+      const startResponse = await axios.get(
         `${API_URL}/student/quizzes/start`,
-        {},
+        
         {
           headers: {
             authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -282,34 +282,30 @@ const Quiz = () => {
   };
 
   const handleAnswerSelected = (selectedAnswer: number) => {
-    // if (!currentQuestion) return;
+    if (!currentQuestion) return;
 
     const isCorrect = selectedAnswer === currentQuestion.correct_answer;
-    setQuestionsAnswered((prev) => {
-      const updatedCount = prev + 1;
-  
-      // Check if quiz is complete (10 questions)
-      if (updatedCount >= 10) {
-        setCompletedQuiz(true);
-        submitQuizAnswers(
-          (newScore) => {
-            setScore(newScore);
-          }
-        ); // Submit once the quiz is completed
-      }
-  
-      return updatedCount;
-    });
+    setQuestionsAnswered((prev) => prev + 1);
 
     setCorrectAnswers((prev) => (isCorrect ? prev + 1 : prev));
-    setQuizAnswers((prev) => [
-      ...prev,
-      {
-        questionId: currentQuestion.id,
-        studentAnswer: selectedAnswer.toString(),
-        isCorrect,
-      },
-    ]);
+    setQuizAnswers((prev) => {
+      const updatedAnswers = [
+        ...prev,
+        {
+          questionId: currentQuestion.id,
+          studentAnswer: selectedAnswer.toString(),
+          isCorrect,
+        },
+      ];
+      if (updatedAnswers.length === 10) {
+        setCompletedQuiz(true);
+        submitQuizAnswers((newScore) => {
+          setScore(newScore);
+        });
+      }
+      return updatedAnswers;
+    });
+    
     // Record result for the progress chart
     setQuizResults((prev) => [
       ...prev,
@@ -320,7 +316,7 @@ const Quiz = () => {
     ]);
 
     // Check if quiz is complete (10 questions)
-    if (questionsAnswered + 1 >= 10) {
+    if (questionsAnswered + 1 === 10) {
       setCompletedQuiz(true);
       submitQuizAnswers( 
         (newScore) => {
@@ -365,7 +361,8 @@ const Quiz = () => {
       });
     }
     try{
-      const response = await axios.post(`${API_URL}/student/quizzes/end`, sessionId, {
+      console.log("🚀 ~ submitQuizAnswers ~ sessionId:", sessionId)
+      const response = await axios.get(`${API_URL}/student/quizzes/end/${sessionId}`, {
         headers: {
           authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -390,10 +387,11 @@ const Quiz = () => {
     }
   };
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < questionResponse.data.length - 1) {
+    if (currentQuestionIndex < 10) {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     } else {
       // End of quiz logic here
+      setCompletedQuiz(true);
     }
     // generateNewQuestion();
   };
@@ -420,6 +418,11 @@ const Quiz = () => {
   // );
   const isTeacher = localStorage.getItem("teacher") ? true : false;
   const isStudent = localStorage.getItem("student") ? true : false;
+  console.log("Questions Answered:", questionsAnswered);
+console.log("Current Question Index:", currentQuestionIndex);
+console.log("Quiz Answers Length:", quizAnswers.length);
+console.log("Current Question:", currentQuestion);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />

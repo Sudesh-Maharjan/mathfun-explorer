@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Student, useQuiz, Question } from '../context/QuizContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,12 +25,112 @@ import {
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { CheckCircle2, XCircle, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import axios from 'axios';
+// import { set } from 'date-fns';
 
 interface StudentDetailedPerformanceProps {
   students: Student[];
 }
+interface StudentPerformance {
+  difficultyPerformance: {
+    easy: {
+      correct: number;
+      attempted: number;
+    };
+    medium: {
+      correct: number;
+      attempted: number;
+    };
+    hard: {
+      correct: number;
+      attempted: number;
+    };
+  },
+  operationPerformance: {
+    addition: {
+      correct: number;
+      attempted: number;
+    };
+    subtraction: {
+      correct: number;
+      attempted: number;
+    };
+    multiplication: {
+      correct: number;
+      attempted: number;
+    };
+    division: {
+      correct: number;
+      attempted: number;
+    };
+  };
+
+}
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 
 const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({ students }) => {
+  const [studentRoll, setStudentRoll] = useState('');
+  const [studentPerformance, setStudentPerformance] = useState<StudentPerformance | null>(null);
+  const [operationPerformanceData, setOperationPerformanceData] = useState([
+    { name: "Addition", correct: 0, wrong: 0 },
+    { name: "Subtraction", correct: 0, wrong: 0 },
+    { name: "Multiplication", correct: 0, wrong: 0 },
+    { name: "Division", correct: 0, wrong: 0 }
+  ]);
+  const [difficultyPerformanceData, setDifficultyPerformanceData] = useState([
+    { name: "Easy", correct: 0, wrong: 0 },
+    { name: "Medium", correct: 0, wrong: 0 },
+    { name: "Hard", correct: 0, wrong: 0 }
+  ]);
+  console.log("🚀 ~ operationPerformanceData:", operationPerformanceData)
+  console.log("🚀 ~ students:", students)
+useEffect(() => {
+    const fetchStudentPerformance = async () => {
+      if (!studentRoll) return;
+      try {
+        const response = await axios.get(`${API_URL}/teacher/student-performance/${studentRoll}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+          },
+        });
+        const data = await response.data.data;
+      if (data.operationPerformance) {
+
+        setOperationPerformanceData((prevData) =>
+          prevData.map((item) => {
+            const operation = data.operationPerformance[item.name.toLowerCase()];
+            console.log("🚀 ~ prevData.map ~ operation:", operation)
+            return operation
+              ? { ...item, correct: operation.correct, wrong: operation.attempted - operation.correct }
+              : item;
+          })
+        );
+        
+      }
+      if(data.difficultyPerformance){
+        setDifficultyPerformanceData((prevData) =>
+          prevData.map((item) => {
+            const difficulty = data.difficultyPerformance[item.name.toLowerCase()];
+            console.log("🚀 ~ prevData.map ~ difficulty:", difficulty)
+            return difficulty
+              ? { ...item, correct: difficulty.correct, wrong: difficulty.attempted - difficulty.correct }
+              : item;
+          })
+        );
+      }
+        console.log("Student performance", response);
+        setStudentPerformance(response.data?.data);
+      } catch (error) {
+        console.error('Error fetching student performance:', error);
+      }
+    };
+
+    if (studentRoll) {
+      fetchStudentPerformance();
+    }
+}, [studentRoll]);
   const { questionHistory } = useQuiz();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
@@ -64,22 +164,22 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
         <CardContent>
           <div className="space-y-3">
             {students.map((student) => {
-              const accuracy = student.totalQuestions > 0 
-                ? Math.round((student.correctAnswers / student.totalQuestions) * 100) 
+              const accuracy = student.total_questions_attempted > 0 
+                ? Math.round((student.correct_questions / student.total_questions_attempted) * 100) 
                 : 0;
                 
               return (
                 <div 
                   key={student.id}
                   className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/20 cursor-pointer"
-                  onClick={() => setSelectedStudent(student)}
+                  onClick={() => { setSelectedStudent(student); setStudentRoll(student.roll_number); }}
                 >
                   <div className="flex items-center gap-3">
                     <User className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">{student.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        Roll: {student.rollNumber} | Class: {student.class}
+                        Roll: {student.roll_number} | Class: {student.name}
                       </div>
                     </div>
                   </div>
@@ -99,15 +199,16 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
   }
 
   // Calculate student metrics
-  const accuracy = selectedStudent.totalQuestions > 0 
-    ? Math.round((selectedStudent.correctAnswers / selectedStudent.totalQuestions) * 100) 
+  const accuracy = selectedStudent.total_questions_attempted > 0 
+    ? Math.round((selectedStudent.correct_questions / selectedStudent.total_questions_attempted) * 100) 
     : 0;
-  const wrongAnswers = selectedStudent.totalQuestions - selectedStudent.correctAnswers;
+    const wrongAnswers = Number(selectedStudent.total_questions_attempted) - Number(selectedStudent.correct_questions);
+
 
   // Generate mock question data for the student
   // Instead of using allQuestions (which doesn't exist), create mock data based on the student's performance
   // or use the available questionHistory as a reference
-  const mockAnsweredQuestions = Array.from({ length: selectedStudent.totalQuestions }).map((_, index) => {
+  const mockAnsweredQuestions = Array.from({ length: selectedStudent.total_questions_attempted }).map((_, index) => {
     // Use questionHistory items as templates if available, otherwise create generic questions
     const baseQuestion = questionHistory[index % questionHistory.length] || {
       id: `mock-${index}`,
@@ -119,7 +220,7 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
     };
     
     // Make sure the number of correct answers matches the student's record
-    const isCorrect = index < selectedStudent.correctAnswers;
+    const isCorrect = index < Number(selectedStudent.correct_questions);
     
     return {
       ...baseQuestion,
@@ -129,60 +230,69 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
   });
 
   // Data for operation type performance
-  const operationPerformance = [
-    { name: 'Addition', correct: 0, wrong: 0 },
-    { name: 'Subtraction', correct: 0, wrong: 0 },
-    { name: 'Multiplication', correct: 0, wrong: 0 },
-    { name: 'Division', correct: 0, wrong: 0 }
-  ];
+ console.log("Student Performnceeeee", studentPerformance);
+ if (studentPerformance) {
+ const {difficultyPerformance, operationPerformance} = studentPerformance;
+ console.log("🚀 ~ difficultyPerformance:", difficultyPerformance)
+ console.log("🚀 ~ operationPerformance:", operationPerformance)
+ }else{
+  console.log("🚀 ~ No student performance data available");
+ }
+
+  // const operationPerformanceData = [
+  //   { name: 'Addition', correct: 0 , wrong: 0 },
+  //   { name: 'Subtraction', correct: 0, wrong: 0 },
+  //   { name: 'Multiplication', correct: 0, wrong: 0 },
+  //   { name: 'Division', correct: 0, wrong: 0 }
+  // ];
 
   // Data for difficulty level performance
-  const difficultyPerformance = [
-    { name: 'Easy', correct: 0, wrong: 0 },
-    { name: 'Medium', correct: 0, wrong: 0 },
-    { name: 'Hard', correct: 0, wrong: 0 }
-  ];
+  // const difficultyPerformanceData = [
+  //   { name: 'Easy', correct: 0, wrong: 0 },
+  //   { name: 'Medium', correct: 0, wrong: 0 },
+  //   { name: 'Hard', correct: 0, wrong: 0 }
+  // ];
 
   // Calculate operation and difficulty performance
   mockAnsweredQuestions.forEach(q => {
-    const opIndex = operationPerformance.findIndex(op => 
+    const opIndex = operationPerformanceData.findIndex(op => 
       op.name.toLowerCase() === q.operation
     );
     
     if (opIndex !== -1) {
       if (q.isCorrect) {
-        operationPerformance[opIndex].correct++;
+        operationPerformanceData[opIndex].correct++;
       } else {
-        operationPerformance[opIndex].wrong++;
+        operationPerformanceData[opIndex].wrong++;
       }
     }
 
-    const diffIndex = difficultyPerformance.findIndex(diff => 
+    const diffIndex = difficultyPerformanceData.findIndex(diff => 
       diff.name.toLowerCase() === q.difficulty
     );
     
     if (diffIndex !== -1) {
       if (q.isCorrect) {
-        difficultyPerformance[diffIndex].correct++;
+        difficultyPerformanceData[diffIndex].correct++;
       } else {
-        difficultyPerformance[diffIndex].wrong++;
+        difficultyPerformanceData[diffIndex].wrong++;
       }
     }
   });
 
   // Filter out operation types with no data
-  const filteredOperationPerf = operationPerformance.filter(
+  const filteredOperationPerf = operationPerformanceData.filter(
     op => op.correct > 0 || op.wrong > 0
   );
 
   // Filter out difficulty levels with no data
-  const filteredDifficultyPerf = difficultyPerformance.filter(
+  const filteredDifficultyPerf = difficultyPerformanceData.filter(
     diff => diff.correct > 0 || diff.wrong > 0
   );
 
   // Data for the overall performance pie chart
   const overallData = [
-    { name: 'Correct', value: selectedStudent.correctAnswers, color: '#4ade80' },
+    { name: 'Correct', value: Number(selectedStudent.correct_questions), color: '#4ade80' },
     { name: 'Wrong', value: wrongAnswers, color: '#ef4444' }
   ].filter(item => item.value > 0);
 
@@ -201,7 +311,7 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
             </Button>
             <CardTitle>{selectedStudent.name}</CardTitle>
             <CardDescription>
-              Roll Number: {selectedStudent.rollNumber} | Class: {selectedStudent.class}
+              Roll Number: {selectedStudent.roll_number} | Class: {selectedStudent.class}
             </CardDescription>
           </div>
           <div className="text-right">
@@ -262,7 +372,7 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
                   </div>
                   <div className="flex flex-col items-center p-3 border rounded-md">
                     <div className="text-sm text-muted-foreground">Questions</div>
-                    <div className="text-2xl font-bold">{selectedStudent.totalQuestions}</div>
+                    <div className="text-2xl font-bold">{selectedStudent.total_questions_attempted}</div>
                   </div>
                 </div>
               </CardContent>
@@ -392,7 +502,7 @@ const StudentDetailedPerformance: React.FC<StudentDetailedPerformanceProps> = ({
                     <TableCell>{question.question}</TableCell>
                     <TableCell className="capitalize">{question.operation}</TableCell>
                     <TableCell className="capitalize">{question.difficulty}</TableCell>
-                    <TableCell>{question.answer}</TableCell>
+                    <TableCell>{question.studentAnswer}</TableCell>
                     <TableCell>{question.studentAnswer}</TableCell>
                   </TableRow>
                 ))

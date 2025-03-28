@@ -14,10 +14,11 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Admin = () => {
-  const { students } = useQuiz();
+  // const { students } = useQuiz();
   const navigate = useNavigate();
   const isTeacher = localStorage.getItem('teacher') ? true : false;
-const [studentList, setStudentList] = useState([]);
+const [studentsList, setStudentList] = useState([]);
+const [studentBoard, setStudentBoard] = useState([]);
 
 const handleDeleteClick = async (rollNumber: number) => {
   console.log("🚀 ~ handleDeleteClick ~ rollNumber:", rollNumber)
@@ -43,7 +44,19 @@ const handleDeleteClick = async (rollNumber: number) => {
     alert("Failed to delete student.");
   }
 };
+useEffect(() => {
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/leaderboard`);
+      console.log("Leaderboard response data", response);
+      setStudentBoard(response.data?.data);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    }
+  };
 
+  fetchLeaderboard();
+}, []);
 
 useEffect(() => {
   (async () => {
@@ -142,7 +155,6 @@ useEffect(() => {
                         <tr className="border-b">
                           <th className="text-left py-2 px-3 font-medium">Name</th>
                           <th className="text-left py-2 px-3 font-medium">Roll Number</th>
-                          <th className="text-left py-2 px-3 font-medium">Class</th>
                           <th className="text-center py-2 px-3 font-medium">Score</th>
                           <th className="text-center py-2 px-3 font-medium">Questions Attempted</th>
                           <th className="text-center py-2 px-3 font-medium">Correct Answers</th>
@@ -150,14 +162,14 @@ useEffect(() => {
                         </tr>
                       </thead>
                       <tbody>
-                        {students.length === 0 ? (
+                        {studentBoard.length === 0 ? (
                           <tr>
                             <td colSpan={7} className="text-center py-6 text-muted-foreground">
                               No student data available
                             </td>
                           </tr>
                         ) : (
-                          students.map(student => {
+                          studentBoard.map(student => {
                             const accuracy = student.total_questions_attempted > 0 
                               ? Math.round((student.correct_questions / student.total_questions_attempted) * 100) 
                               : 0;
@@ -166,7 +178,6 @@ useEffect(() => {
                               <tr key={student.id} className="border-b hover:bg-muted/20">
                                 <td className="py-2 px-3 font-medium">{student.name}</td>
                                 <td className="py-2 px-3">{student.roll_number}</td>
-                                <td className="py-2 px-3">{student.score}</td>
                                 <td className="py-2 px-3 text-center">{student.score}</td>
                                 <td className="py-2 px-3 text-center">{student.total_questions_attempted}</td>
                                 <td className="py-2 px-3 text-center">{student.correct_questions}</td>
@@ -183,7 +194,7 @@ useEffect(() => {
             </TabsContent>
             
             <TabsContent value="performance">
-              <StudentDetailedPerformance students={students} />
+              <StudentDetailedPerformance students={studentBoard} />
             </TabsContent>
             <TabsContent value="list">
               <Card className="glass-card">
@@ -205,14 +216,14 @@ useEffect(() => {
                         </tr>
                       </thead>
                       <tbody>
-                        {studentList.length === 0 ? (
+                        {studentsList.length === 0 ? (
                           <tr>
                             <td colSpan={3} className="text-center py-6 text-muted-foreground">
                               No student data available
                             </td>
                           </tr>
                         ) : (
-                          studentList.map(student => (
+                          studentsList.map(student => (
                             <tr key={student.id} className="border-b hover:bg-muted/20">
                               <td className="py-2 px-3 font-medium">{student.name}</td>
                               <td className="py-2 px-3">{student.roll_number}</td>

@@ -123,8 +123,9 @@ const Leaderboard = ({score}) => {
                     <div className="grid grid-cols-1 gap-3">
                       <div className="hidden sm:grid grid-cols-12 text-sm font-medium text-muted-foreground p-2 border-b">
                         <div className="col-span-1">Rank</div>
-                        <div className="col-span-5">Name</div>
-                        <div className="col-span-2 text-center">Questions</div>
+                        <div className="col-span-2">Name</div>
+                        <div className="col-span-2 text-center">Questions Attempted</div>
+                        <div className="col-span-2 text-center">Correct</div>
                         <div className="col-span-2 text-center">Accuracy</div>
                         <div className="col-span-2 text-right">Score</div>
                       </div>
@@ -151,12 +152,15 @@ const Leaderboard = ({score}) => {
                               {getRankIcon(index)}
                             </div>
                             
-                            <div className="col-span-2 sm:col-span-5 font-medium truncate">
+                            <div className="col-span-2 sm:col-span-2 font-medium truncate">
                               {student.name}
                             </div>
                             
                             <div className="hidden sm:block sm:col-span-2 text-center">
                               {student.total_questions_attempted}
+                            </div>
+                            <div className="hidden sm:block sm:col-span-2 text-center">
+                              {student.correct_questions}
                             </div>
                             
                             <div className="hidden sm:block sm:col-span-2 text-center">
@@ -164,7 +168,7 @@ const Leaderboard = ({score}) => {
                             </div>
                             
                             <div className="col-span-1 sm:col-span-2 text-right font-bold">
-                              {score}
+                              {student.score}
                             </div>
                           </motion.div>
                         );

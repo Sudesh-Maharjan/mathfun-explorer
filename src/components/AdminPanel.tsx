@@ -31,6 +31,7 @@ const AdminPanel: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
+
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...options];
     newOptions[index] = value;
@@ -145,6 +146,22 @@ const response = await axios.put(`${API_URL}/teacher/question/${editingId}`, {
         setNewQuestion('');
         setNewAnswer('');
         setOptions(['', '', '']);
+        const fetchQuestions = async () => {
+          try {
+            const response = await axios.get(`${API_URL}/teacher/questions-list`, {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+              },
+            });
+            setCustomQuestions(response.data?.data);
+            console.log("Custom Questions", response.data?.data)
+            // Handle customQuestions as needed
+          } catch (error) {
+            console.error("Failed to fetch questions:", error);
+          }
+        };
+        fetchQuestions()
       } catch (error) {
         toast({ title: "Error", description: "Failed to add question", variant: "destructive" });
       } finally {
