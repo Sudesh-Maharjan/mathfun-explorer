@@ -35,7 +35,8 @@ const handleDeleteClick = async (rollNumber: number) => {
 
     if (response) {
       alert("Student deleted successfully!");
-      // Optionally, refresh data or update the UI accordingly
+      // reload page
+      window.location.reload();
     } else {
       alert(`Error: ${data}`);
     }
@@ -228,7 +229,13 @@ useEffect(() => {
                               <td className="py-2 px-3 font-medium">{student.name}</td>
                               <td className="py-2 px-3">{student.roll_number}</td>
                               <td className="py-2 px-3">{student.class}</td>
-                              <button onClick={() => handleDeleteClick(student.roll_number)} className="py-2 px-3 cursor-pointer text-red-700 bg-red-200 hover:bg-red-300 border border-red-400 rounded-md">Delete</button>
+                              <button
+  onClick={() => handleDeleteClick(student.roll_number)}
+  className="py-1 px-2 cursor-pointer text-white bg-red-500 hover:bg-red-700 border border-red-700 rounded-lg shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+>
+  Delete
+</button>
+
                             </tr>
                           ))
                         )}

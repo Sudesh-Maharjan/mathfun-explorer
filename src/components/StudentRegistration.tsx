@@ -71,7 +71,9 @@ const handleRegister = async (e: React.FormEvent) => {
         description: "You're ready to play!",
       });
 
-      navigate('/quiz');
+      navigate('/register');
+      //reload the page
+      window.location.reload();
     } else {
       toast({
         title: "Registration Failed",

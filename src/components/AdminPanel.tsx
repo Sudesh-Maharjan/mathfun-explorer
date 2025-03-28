@@ -109,10 +109,10 @@ const response = await axios.put(`${API_URL}/teacher/question/${editingId}`, {
         operation,
         difficulty,
         question: newQuestion,
-        correct_answer: newAnswer,
-        wrong_option1: options[0],
-        wrong_option2: options[1],
-        wrong_option3: options[2]
+        correctAnswer: newAnswer,
+        wrongOption1: options[0],
+        wrongOption2: options[1],
+        wrongOption3: options[2]
       }, {
         headers: {
           "Content-Type": "application/json",
@@ -120,8 +120,24 @@ const response = await axios.put(`${API_URL}/teacher/question/${editingId}`, {
         },
       });
       if (!response) throw new Error('Failed to update question');
-      setCustomQuestions(response.data.data);
+      setCustomQuestions(response?.data?.data);
       setEditingId(null);
+      const fetchQuestions = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/teacher/questions-list`, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+            },
+          });
+          setCustomQuestions(response.data?.data);
+          console.log("Custom Questions", response.data?.data)
+          // Handle customQuestions as needed
+        } catch (error) {
+          console.error("Failed to fetch questions:", error);
+        }
+      };
+      fetchQuestions();
       toast({
         title: "Success",
         description: "Question updated successfully",
@@ -174,6 +190,37 @@ const response = await axios.put(`${API_URL}/teacher/question/${editingId}`, {
     setNewAnswer('');
     setOptions(['', '', '']);
   };
+const removeCustomQuestion = async (id: string) => {
+  try {
+    const response = await axios.delete(`${API_URL}/teacher/question/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+      },
+    });
+    if (!response) throw new Error('Failed to remove question');
+    setCustomQuestions(response?.data?.data);
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/teacher/questions-list`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('teacher_token')}`,
+          },
+        });
+        setCustomQuestions(response.data?.data);
+        console.log("Custom Questions", response.data?.data)
+        // Handle customQuestions as needed
+      } catch (error) {
+        console.error("Failed to fetch questions:", error);
+      }
+    };
+    fetchQuestions();
+  }
+  catch (error) {
+    console.error('Failed to remove question:', error);
+  }
+}
 
   const handleEditQuestion = (question: Question) => {
     setEditingId(question.id);
@@ -323,7 +370,7 @@ const response = await axios.put(`${API_URL}/teacher/question/${editingId}`, {
           ) : (
             <motion.div className="space-y-3">
               <AnimatePresence>
-                {customQuestions.map((question) => (
+              {Array.isArray(customQuestions) && customQuestions.map((question) => (
                   <motion.div
                     key={question.id}
                     initial={{ opacity: 0, height: 0 }}

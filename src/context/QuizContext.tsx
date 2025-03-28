@@ -213,11 +213,11 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
     
     if (filteredQuestions.length === 0) {
-      toast({
-        title: "No questions available",
-        description: `No ${difficulty} ${operation} questions found. Please ask a teacher to add some.`,
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "No questions available",
+      //   description: `No ${difficulty} ${operation} questions found. Please ask a teacher to add some.`,
+      //   variant: "destructive",
+      // });
       setCurrentQuestion(null);
       console.log(`No ${difficulty} ${operation} questions found. Please ask a teacher to add some.`);
       return;
